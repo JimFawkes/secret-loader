@@ -188,9 +188,32 @@ def test_env_file_loader_fail_for_none_exisiting_variable(tmp_path):
         value = env_file_loader.load("UNKNOWN_CREDENTIAL")
 
 
+def dummy_load_env_file(filepath, *args, **kwargs):
+    os.environ[ENV_VAR_NAME] = ENV_VAR_VALUE
+    return None
+
+
+def dummy_find_env_file(*args, **kwargs):
+    return None
+
+
+def test_env_file_loader_with_dummy_callables():
+    env_file_loader = secrets.EnvFileLoader(dummy_load_env_file, dummy_find_env_file)
+    value = env_file_loader.load(ENV_VAR_NAME)
+
+    assert value == ENV_VAR_VALUE
+
+    del os.environ[ENV_VAR_NAME]
+
+
 # ----------------------------------------------------------------------------
 # Test AWSSecretsManagerLoader
 # ----------------------------------------------------------------------------
+
+
+# def test_aws_secrets_loader_exists():
+#     aws_secrets_loader = secrets.AWSSecretsLoader()
+#     assert aws_secrets_loader is not None
 
 
 # ----------------------------------------------------------------------------
