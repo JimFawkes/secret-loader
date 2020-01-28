@@ -38,7 +38,7 @@ Usage:
     There could also be an attr to allow to ignore the rest (potential race-condition?)
 
 """
-from dotenv import load_dotenv, find_dotenv
+import dotenv
 
 import warnings
 import os
@@ -76,19 +76,33 @@ class BaseLoader(BaseClass):
 
 
 class EnvLoader(BaseLoader):
+    def __init__(self, getenv: Callable = os.getenv, *args: tuple, **kwargs: dict) -> None:
+        self.getenv = getenv
+
     def load(self, credential_name: str) -> str:
-        value = os.environ.get(credential_name)
+        value = self.getenv(credential_name)
         if value is None:
             raise CredentialNotFoundError(f"EnvLoader could not load {credential_name}")
         return value
 
 
 class EnvFileLoader(EnvLoader):
-    def __init__(self, file_path: Union[str, Path, None] = None) -> None:
-        if not file_path:
-            load_dotenv(find_dotenv())
-        else:
-            load_dotenv(file_path)
+    def __init__(
+        self,
+        file_path: Union[str, Path, None] = None,
+        load_env_file: Callable = dotenv.load_dotenv,
+        find_env_file: Callable = dotenv.find_dotenv,
+        *args: tuple,
+        **kwargs: dict,
+    ) -> None:
+
+        self.find_env_file = find_env_file
+        self.load_env_file = load_env_file
+        self.file_path = file_path or self.find_env_file()
+
+        self.load_env_file(self.file_path)
+
+        super().__init__(os.getenv, *args, **kwargs)
 
 
 # Should the default list, be a global var?
