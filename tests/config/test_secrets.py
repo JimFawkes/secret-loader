@@ -1,7 +1,131 @@
 import pytest
 import os
 
+from contextlib import contextmanager
+
+import boto3
+
+import botocore.session
+from botocore.stub import Stubber, ANY
+import datetime
+
 from utils.config import secrets
+
+
+# TODO: Move the appropriate things to a base file
+# TODO: Refacotr tests
+# TODO: Use fixtures
+# TODO: Use parameterized fixtures to not repeat so much
+# TODO: Add docstrings
+
+ENV_VAR_NAME = "TEST_CREDENTIAL_NAME"
+ENV_VAR_VALUE = "SECRET_VALUE"
+
+ENV_FILE_CONTENT = f"""
+{ENV_VAR_NAME}={ENV_VAR_VALUE}
+"""
+
+SM_RESPONSE_TEMPLATE = {
+    "ARN": f"arn:aws:secretsmanager:eu-central-1:123567891234:secret:{ENV_VAR_NAME}-AbCdEf",
+    "Name": ENV_VAR_NAME,
+    "VersionId": "1a2bcd34-efab-5c67-89d1-234f5a6b78c9",
+    # "SecretString": '{"eu":{"USR":"eu_user_name","PW":"eu_password"},"us":{"USR":"us_user_name","PW":"us_password"}}',
+    "SecretString": ENV_VAR_VALUE,
+    "VersionStages": ["AWSCURRENT"],
+    "CreatedDate": datetime.datetime(2020, 1, 19, 15, 17, 10, 957000),
+    "ResponseMetadata": {
+        "RequestId": "1ab2cd34-5e67-891f-23ab-45c6d78ef9a1",
+        "HTTPStatusCode": 200,
+        "HTTPHeaders": {
+            "date": "Wed, 01 Jan 2020 01:23:45 GMT",
+            "content-type": "application/x-amz-json-1.1",
+            "content-length": "363",
+            "connection": "keep-alive",
+            "x-amzn-requestid": "1ab2cd34-5e67-891f-23ab-45c6d78ef9a1",
+        },
+        "RetryAttempts": 0,
+    },
+}
+
+SM_EXPECTED_PARAMS = {"SecretId": ANY}
+
+
+# TODO: Make these two stub helper methods into context managers
+def get_stubbed_boto_client_response(
+    service_name="secretsmanager",
+    region_name="eu-central-1",
+    method_name="get_secret_value",
+    response=SM_RESPONSE_TEMPLATE,
+    expected_params=SM_EXPECTED_PARAMS,
+):
+    client = botocore.session.get_session().create_client(service_name, region_name)
+
+    stub = Stubber(client)
+    stub.add_response(method_name, response, expected_params)
+    stub.activate()
+
+    return client
+
+    stub.assert_no_pending_responses()
+    stub.deactivate()
+
+
+def get_stubbed_boto_client_error(
+    service_name="secretsmanager",
+    region_name="eu-central-1",
+    method_name="get_secret_value",
+    response=SM_RESPONSE_TEMPLATE,
+    expected_params=SM_EXPECTED_PARAMS,
+    service_error_code="InvalidParameterException",
+):
+    client = botocore.session.get_session().create_client(service_name, region_name)
+
+    stub = Stubber(client)
+    stub.add_client_error(method=method_name, expected_params=expected_params, service_error_code=service_error_code)
+    stub.activate()
+
+    return client
+
+
+def dummy_load_env_file(filepath, *args, **kwargs):
+    os.environ[ENV_VAR_NAME] = ENV_VAR_VALUE
+    return None
+
+
+def dummy_find_env_file(*args, **kwargs):
+    return None
+
+
+# NOTE: This is a very weak and strange test. I could not come up with a better
+# solution for this. Please refactor ASAP.
+def test_get_stubbed_boto_client_response():
+    service_name = "secretsmanager"
+    region_name = "eu-central-1"
+
+    client = get_stubbed_boto_client_response(service_name, region_name)
+    client_type_str = str(client.__class__).lower()
+    assert f"<class 'botocore.client.{service_name}'>" == client_type_str
+
+
+def test_get_stubbed_boto_client_error():
+    service_name = "secretsmanager"
+    region_name = "eu-central-1"
+
+    client = get_stubbed_boto_client_error(service_name, region_name)
+    client_type_str = str(client.__class__).lower()
+    assert f"<class 'botocore.client.{service_name}'>" == client_type_str
+
+
+# NOTE: This is a very weak and strange test. I could not come up with a better
+# solution for this. Please refactor ASAP.
+def test_get_client():
+    service_name = "secretsmanager"
+    region_name = "eu-central-1"
+
+    client = secrets.get_client(service_name, region_name)
+    client_type_str = str(client.__class__).lower()
+
+    assert f"<class 'botocore.client.{service_name}'>" == client_type_str
 
 
 # ----------------------------------------------------------------------------
@@ -157,14 +281,6 @@ def test_env_file_loader_exists():
     assert env_file_loader is not None
 
 
-ENV_VAR_NAME = "TEST_CREDENTIAL_NAME"
-ENV_VAR_VALUE = "SECRET_VALUE"
-
-ENV_FILE_CONTENT = f"""
-{ENV_VAR_NAME}={ENV_VAR_VALUE}
-"""
-
-
 def test_env_file_loader_value_from_file(tmp_path):
     tmp_dir = tmp_path / "tmp_env"
     tmp_dir.mkdir()
@@ -188,15 +304,6 @@ def test_env_file_loader_fail_for_none_exisiting_variable(tmp_path):
         value = env_file_loader.load("UNKNOWN_CREDENTIAL")
 
 
-def dummy_load_env_file(filepath, *args, **kwargs):
-    os.environ[ENV_VAR_NAME] = ENV_VAR_VALUE
-    return None
-
-
-def dummy_find_env_file(*args, **kwargs):
-    return None
-
-
 def test_env_file_loader_with_dummy_callables():
     env_file_loader = secrets.EnvFileLoader(dummy_load_env_file, dummy_find_env_file)
     value = env_file_loader.load(ENV_VAR_NAME)
@@ -211,9 +318,32 @@ def test_env_file_loader_with_dummy_callables():
 # ----------------------------------------------------------------------------
 
 
-# def test_aws_secrets_loader_exists():
-#     aws_secrets_loader = secrets.AWSSecretsLoader()
-#     assert aws_secrets_loader is not None
+def test_aws_secrets_loader_exists():
+    aws_secrets_loader = secrets.AWSSecretsLoader()
+    assert aws_secrets_loader is not None
+
+
+def test_aws_secrets_loader_takes_client():
+
+    client = get_stubbed_boto_client_response()
+    aws_secrets_loader = secrets.AWSSecretsLoader(client=client)
+    assert aws_secrets_loader.client is client
+
+
+def test_aws_secrets_loader_get_secret_value():
+    client = get_stubbed_boto_client_response()
+    aws_secrets_loader = secrets.AWSSecretsLoader(client=client)
+    value = aws_secrets_loader.load(ENV_VAR_NAME)
+
+    assert value == ENV_VAR_VALUE
+
+
+def test_aws_secrets_loader_fail_for_none_existing_secret():
+    client = get_stubbed_boto_client_error()
+    aws_secrets_loader = secrets.AWSSecretsLoader(client=client)
+
+    with pytest.raises(secrets.CredentialNotFoundError):
+        value = aws_secrets_loader.load("SOME_UNKNOWN_SECRET")
 
 
 # ----------------------------------------------------------------------------

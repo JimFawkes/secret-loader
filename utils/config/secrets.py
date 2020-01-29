@@ -37,8 +37,15 @@ Usage:
     Think about giving the factory a register method to register custom loaders.
     There could also be an attr to allow to ignore the rest (potential race-condition?)
 
+    how should the default env loader list be defined?
+    Think about caching the results to reduce the roudtrips to aws
+
+    TODO: Add doc strings
 """
+import base64
 import dotenv
+import boto3.session
+from botocore.exceptions import ClientError
 
 import warnings
 import os
@@ -46,6 +53,13 @@ import os
 from collections.abc import Mapping
 from typing import Union, Generator, Any, List, Callable
 from pathlib import Path
+
+
+# aws.utils
+def get_client(service_name: str, region_name: str):
+    session = boto3.session.Session()
+    client = session.client(service_name=service_name, region_name=region_name)
+    return client
 
 
 class CredentialNotFoundError(Exception):
@@ -103,6 +117,53 @@ class EnvFileLoader(EnvLoader):
         self.load_env_file(self.file_path)
 
         super().__init__(os.getenv, *args, **kwargs)
+
+
+class AWSSecretsLoader(BaseLoader):
+    # TODO: Fix TypeAnnotations
+    # Not sure how to do type annotations for client
+    def __init__(self, client=None, region_name: str = "eu-central-1") -> None:
+        self.client = client or get_client("secretsmanager", region_name)
+
+    def _get_secret_value(self, secret_name: str) -> str:
+        try:
+            get_secret_value_response: dict = self.client.get_secret_value(SecretId=secret_name)
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "DecryptionFailureException":
+                # Secrets Manager can't decrypt the protected secret text using the provided KMS key.
+                # Deal with the exception here, and/or rethrow at your discretion.
+                raise e
+            elif e.response["Error"]["Code"] == "InternalServiceErrorException":
+                # An error occurred on the server side.
+                # Deal with the exception here, and/or rethrow at your discretion.
+                raise e
+            elif e.response["Error"]["Code"] == "InvalidParameterException":
+                # You provided an invalid value for a parameter.
+                # Deal with the exception here, and/or rethrow at your discretion.
+                raise e
+            elif e.response["Error"]["Code"] == "InvalidRequestException":
+                # You provided a parameter value that is not valid for the current state of the resource.
+                # Deal with the exception here, and/or rethrow at your discretion.
+                raise e
+            elif e.response["Error"]["Code"] == "ResourceNotFoundException":
+                # We can't find the resource that you asked for.
+                # Deal with the exception here, and/or rethrow at your discretion.
+                raise e
+        else:
+            # Decrypts secret using the associated KMS CMK.
+            # Depending on whether the secret is a string or binary, one of these fields will be populated.
+            if "SecretString" in get_secret_value_response:
+                return get_secret_value_response["SecretString"]
+            else:
+                return base64.b64decode(get_secret_value_response["SecretBinary"])
+
+    def load(self, credential_name: str) -> str:
+        try:
+            return self._get_secret_value(credential_name)
+        except ClientError as e:
+            raise CredentialNotFoundError(
+                f"Could not retrieve secret: {credential_name} from AWS SecretsManager"
+            ) from e
 
 
 # Should the default list, be a global var?
