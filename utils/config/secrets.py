@@ -175,16 +175,17 @@ class AWSSecretsLoader(BaseLoader):
 
 # TODO: Think about renaming this class
 class CredentialLoader(BaseClass):
-    def __init__(self, loaders: list = []) -> None:
+    def __init__(self, loaders: list = [], *, parser: Callable = lambda x: x) -> None:
         self.loaders: List[BaseLoader] = self._construct_loader_list(loaders)
+        self._parser: Callable = parser
 
-    def __call__(self, credential_name: str) -> str:
+    def __call__(self, credential_name: str, *, parser: Union[Callable, None] = None) -> str:
         if not self.loaders:
             raise NoLoaderConfiguredError(f"{self} has no loader configured, loaders={self.loaders}")
         for loader in self.loaders:
             try:
                 credential: str = loader.load(credential_name)
-                return credential
+                return self.parse(credential, parser=parser)
             except CredentialNotFoundError as e:
                 continue
 
@@ -211,9 +212,17 @@ class CredentialLoader(BaseClass):
                 name, loader_, args, kwargs = loader
                 loader_list.append(CredentialLoader._construct_loader(name, loader_, *args, **kwargs))
             else:
-                raise ConstructLoaderError(f"Could not construct loader for {loader}")
+                raise ConstructLoaderError(f"Could not construct loader for '{loader}'")
 
         return loader_list
+
+    # This could return multiple types (dict, str, int, float), dependent on the parser
+    # TODO: How can I efficiently compose a return type for this situation?
+    def parse(self, value, /, *, parser: Union[Callable, None] = None):
+        if parser is None:
+            return self._parser(value)
+        else:
+            return parser(value)
 
     def register(self, name: str, loader: BaseLoader, *args: Any, **kwargs: Any) -> None:
         constructed_loader = self._construct_loader(name, loader, *args, **kwargs)

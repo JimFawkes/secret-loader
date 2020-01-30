@@ -500,6 +500,54 @@ def test_credential():
     assert isinstance(secrets.credential, secrets.CredentialLoader)
 
 
+def test_credential_loader_pass_parser():
+    value = "secret_value"
+    cred = secrets.CredentialLoader(parser=lambda x: value)
+
+    assert value == cred.parse(ENV_VAR_NAME)
+    assert value == cred.parse(value)
+
+
+def test_credential_loader_pass_parser_to_parse():
+    value = "secret_value"
+    parser = lambda x: value
+    cred = secrets.CredentialLoader()
+
+    assert ENV_VAR_VALUE == cred.parse(ENV_VAR_VALUE)
+    assert value == cred.parse(ENV_VAR_NAME, parser=parser)
+
+
+def test_credential_loader_last_parser_beats_init_parser():
+    value_1 = "secret_value_1"
+    value_2 = "secret_value_2"
+    parser_1 = lambda x: value_1
+    parser_2 = lambda x: value_2
+    cred = secrets.CredentialLoader(parser=parser_1)
+
+    assert value_1 == cred.parse(ENV_VAR_NAME)
+    assert value_2 == cred.parse(ENV_VAR_NAME, parser=parser_2)
+
+
+def test_credential_loader_parser_must_be_keyword():
+
+    with pytest.raises(TypeError):
+        cred = secrets.CredentialLoader([("dummy", DummyLoader, (), {}),], lambda x: x)
+
+
+def test_credential_loader_use_parser_passed_to_call():
+    cred = secrets.CredentialLoader([("dummy", DummyLoader, (), {}),])
+    value = "secret_value"
+
+    assert cred(ENV_VAR_NAME, parser=lambda x: value) == value
+
+
+def test_credential_loader_parser_on_call_must_be_keyword():
+    cred = secrets.CredentialLoader([("dummy", DummyLoader, (), {}),])
+
+    with pytest.raises(TypeError):
+        cred(ENV_VAR_NAME, lambda x: value)
+
+
 # ----------------------------------------------------------------------------
 # Test Credential
 # ----------------------------------------------------------------------------
