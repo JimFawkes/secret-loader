@@ -1,5 +1,4 @@
 import pytest
-import os
 
 from contextlib import contextmanager
 
@@ -66,9 +65,6 @@ def get_stubbed_boto_client_response(
 
     return client
 
-    stub.assert_no_pending_responses()
-    stub.deactivate()
-
 
 def get_stubbed_boto_client_error(
     service_name="secretsmanager",
@@ -88,12 +84,19 @@ def get_stubbed_boto_client_error(
 
 
 def dummy_load_env_file(filepath, *args, **kwargs):
-    os.environ[ENV_VAR_NAME] = ENV_VAR_VALUE
     return None
+
+
+def test_dummy_load_env_file():
+    assert dummy_load_env_file("") is None
 
 
 def dummy_find_env_file(*args, **kwargs):
     return None
+
+
+def test_dummy_find_env_file():
+    assert dummy_find_env_file() is None
 
 
 # NOTE: This is a very weak and strange test. I could not come up with a better
@@ -235,20 +238,13 @@ def test_env_loader_exists():
     assert isinstance(env_loader, secrets.EnvLoader)
 
 
-def test_env_loader_load_env_variable():
+def test_env_loader_load_env_variable(monkeypatch):
+    monkeypatch.setenv(ENV_VAR_NAME, ENV_VAR_VALUE)
+
     env_loader = secrets.EnvLoader()
+    value = env_loader.load(ENV_VAR_NAME)
 
-    env_var_name = "MY_TEST_ENV_VAR"
-    env_var_value = "some_value"
-    os.environ[env_var_name] = env_var_value
-
-    value = env_loader.load(env_var_name)
-
-    # Remove side-effects for other tests
-    # TODO: Check if there is a better way to do this
-    del os.environ[env_var_name]
-
-    assert value == env_var_value
+    assert value == ENV_VAR_VALUE
 
 
 def test_env_loader_fail_for_none_existing_variable():
@@ -304,13 +300,13 @@ def test_env_file_loader_fail_for_none_exisiting_variable(tmp_path):
         value = env_file_loader.load("UNKNOWN_CREDENTIAL")
 
 
-def test_env_file_loader_with_dummy_callables():
+def test_env_file_loader_with_dummy_callables(monkeypatch):
+    monkeypatch.setenv(ENV_VAR_NAME, ENV_VAR_VALUE)
+
     env_file_loader = secrets.EnvFileLoader(dummy_load_env_file, dummy_find_env_file)
     value = env_file_loader.load(ENV_VAR_NAME)
 
     assert value == ENV_VAR_VALUE
-
-    del os.environ[ENV_VAR_NAME]
 
 
 # ----------------------------------------------------------------------------
@@ -543,6 +539,7 @@ def test_credential_loader_use_parser_passed_to_call():
 
 def test_credential_loader_parser_on_call_must_be_keyword():
     cred = secrets.CredentialLoader([("dummy", DummyLoader, (), {}),])
+    value = "secret_value"
 
     with pytest.raises(TypeError):
         cred(ENV_VAR_NAME, lambda x: value)
