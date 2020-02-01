@@ -1,43 +1,4 @@
 """
-v0.1
-This module defines all interactions with sensitive credentials.
-Specifically it defines:
-    1. A container to store a single key/value pair [Credential]
-    2. A container to store several key/value pairs [Credentials] (Review naming)
-    3. Machinery to load credentials from different sources
-------------------------------------------------------------------------------
-v0.2
-Usage:
-    # config.py in some config file
-    credential = CredentialLoaderFactory(
-                    search_order=[
-                        secrets.DictLoader,
-                        secrets.EnvLoader,
-                        secrets.EnvFileLoader,
-                        secrets.AWSSecretsManagerLoader
-                    ],
-                    raise_failure=True
-                ) # pass in other config
-
-    api_password = credential("API_PASSWORD", default=None, raise_failure=False)
-     - Try to laod credential in all places according to search order
-     - For version v0.2 return plain text value, later maybe return
-        Credential Object and allow reload or expiration or MetaData, maybe allow
-        configuration in the loader to return plain text or credential object
-
-    env_loader = EnvLoader(prefix="") # The prefix allways adds a prefix to the value name,
-                                      # e.g., VALUE_NAME => AWS_VALUE_NAME with prefix="AWS_"
-                                      # maybe in a later version enable case switch lower => capital
-    value = env_loader.load("VALUE_NAME")
-
-    DictLoader ?? How to deal with multiple secrets? Postpone dict loader for now
-    EnvFileLoader(env_file, env_path) use py env loader
-
-
-    Think about giving the factory a register method to register custom loaders.
-    There could also be an attr to allow to ignore the rest (potential race-condition?)
-
-    how should the default env loader list be defined?
     Think about caching the results to reduce the roudtrips to aws
 
     TODO: Add doc strings
@@ -191,7 +152,7 @@ class CredentialLoader(BaseClass):
 
     # TODO: FIXME: loader has no type annotation, I am not sure which type to use
     @staticmethod
-    def _construct_loader(name: str, loader, *args, **kwargs):
+    def _construct_loader(loader, *args, **kwargs):
         return loader(*args, **kwargs)
 
     @staticmethod
@@ -199,18 +160,16 @@ class CredentialLoader(BaseClass):
         loader_list = []
         for loader in loaders:
             if callable(loader):
-                loader_list.append(CredentialLoader._construct_loader("", loader))
+                loader_list.append(CredentialLoader._construct_loader(loader))
             elif isinstance(loader, dict):
                 loader_list.append(
                     CredentialLoader._construct_loader(
-                        loader["name"], loader["loader"], *loader["args"], **loader["kwargs"]
+                        loader["loader"], *loader["args"], **loader["kwargs"]
                     )
                 )
             elif isinstance(loader, tuple):
-                name, loader_, args, kwargs = loader
-                loader_list.append(
-                    CredentialLoader._construct_loader(name, loader_, *args, **kwargs)
-                )
+                loader_, args, kwargs = loader
+                loader_list.append(CredentialLoader._construct_loader(loader_, *args, **kwargs))
             else:
                 raise ConstructLoaderError(f"Could not construct loader for '{loader}'")
 
@@ -224,12 +183,12 @@ class CredentialLoader(BaseClass):
         else:
             return parser(value)
 
-    def register(self, name, loader, *args, **kwargs):
-        constructed_loader = self._construct_loader(name, loader, *args, **kwargs)
+    def register(self, loader, *args, **kwargs):
+        constructed_loader = self._construct_loader(loader, *args, **kwargs)
         self.loaders.insert(0, constructed_loader)
 
 
 credential = CredentialLoader()
-credential.register("AWSSecretsManagerLoader", AWSSecretsLoader)
-credential.register("ENVFileLoader", EnvFileLoader)
-credential.register("ENVLoader", EnvLoader)
+credential.register(AWSSecretsLoader)
+credential.register(EnvFileLoader)
+credential.register(EnvLoader)

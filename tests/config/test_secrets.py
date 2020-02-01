@@ -410,12 +410,7 @@ def test_credential_loader_pass_empty_loaders():
 
 def test_credential_loader_pass_dummy_loader_as_dict():
     loaders = [
-        {
-            "name": "DummyLoader",
-            "loader": DummyLoader,
-            "args": (),
-            "kwargs": {"raise_not_found": True},
-        },
+        {"loader": DummyLoader, "args": (), "kwargs": {"raise_not_found": True},},
     ]
     cred = secrets.CredentialLoader(loaders=loaders)
 
@@ -433,7 +428,7 @@ def test_credential_loader_pass_dummy_loader_as_callable():
 
 def test_credential_loader_pass_dummy_loader_as_tuple():
     loaders = [
-        ("DummyLoader", DummyLoader, (), {"raise_not_found": True}),
+        (DummyLoader, (), {"raise_not_found": True}),
     ]
     cred = secrets.CredentialLoader(loaders=loaders)
 
@@ -443,7 +438,7 @@ def test_credential_loader_pass_dummy_loader_as_tuple():
 
 def test_credential_loader_construct_loader_list():
     loaders = [
-        ("DummyLoader", DummyLoader, (), {"raise_not_found": True}),
+        (DummyLoader, (), {"raise_not_found": True}),
     ]
     cred = secrets.CredentialLoader(loaders=[])
     loader_list = cred._construct_loader_list(loaders)
@@ -461,12 +456,11 @@ def test_credential_loader_construct_loader_list_fail_for_wrong_type():
 
 
 def test_credential_loader_construct_loader():
-    loader_name = "DummyLoader"
     loader_class = DummyLoader
     kwargs = {"raise_not_found": True}
 
     cred = secrets.CredentialLoader(loaders=[])
-    loader = cred._construct_loader(name=loader_name, loader=loader_class, **kwargs)
+    loader = cred._construct_loader(loader=loader_class, **kwargs)
 
     assert isinstance(loader, DummyLoader)
     assert loader.raise_not_found == True
@@ -490,7 +484,7 @@ def test_credential_loader_empty_loaders_raises_no_loaders():
 
 def test_credential_loader_raises_not_found_after_last_loader_failed():
     loaders = [
-        ("DummyLoader", DummyLoader, (), {"raise_not_found": True}),
+        (DummyLoader, (), {"raise_not_found": True}),
     ]
     cred = secrets.CredentialLoader(loaders=loaders)
     credential_name = "SOME_DUMMY_CREDENTIAL"
@@ -512,7 +506,7 @@ def test_credential_laoder_register_loader():
     loaders = []
     cred = secrets.CredentialLoader(loaders=loaders)
     loader = DummyLoader
-    cred.register(name="DummyLoader", loader=loader)
+    cred.register(loader=loader)
 
     assert isinstance(cred.loaders[0], DummyLoader)
     assert len(cred.loaders) == 1
@@ -522,7 +516,7 @@ def test_credential_laoder_register_loader_with_kwargs():
     loaders = []
     cred = secrets.CredentialLoader(loaders=loaders)
     loader = DummyLoader
-    cred.register(name="DummyLoader", loader=loader, raise_not_found=True)
+    cred.register(loader=loader, raise_not_found=True)
 
     assert isinstance(cred.loaders[0], DummyLoader)
     assert len(cred.loaders) == 1
@@ -535,7 +529,7 @@ def test_credential_laoder_register_loader_order():
 
     assert len(cred.loaders) == len(default_loaders)
 
-    cred.register(name="dummy", loader=DummyLoader)
+    cred.register(loader=DummyLoader)
 
     assert len(cred.loaders) == len(default_loaders) + 1
     assert isinstance(cred.loaders[0], DummyLoader)
@@ -576,18 +570,18 @@ def test_credential_loader_last_parser_beats_init_parser():
 def test_credential_loader_parser_must_be_keyword():
 
     with pytest.raises(TypeError):
-        cred = secrets.CredentialLoader([("dummy", DummyLoader, (), {}),], lambda x: x)
+        cred = secrets.CredentialLoader([(DummyLoader, (), {}),], lambda x: x)
 
 
 def test_credential_loader_use_parser_passed_to_call():
-    cred = secrets.CredentialLoader([("dummy", DummyLoader, (), {}),])
+    cred = secrets.CredentialLoader([(DummyLoader, (), {}),])
     value = "secret_value"
 
     assert cred(ENV_VAR_NAME, parser=lambda x: value) == value
 
 
 def test_credential_loader_parser_on_call_must_be_keyword():
-    cred = secrets.CredentialLoader([("dummy", DummyLoader, (), {}),])
+    cred = secrets.CredentialLoader([(DummyLoader, (), {}),])
     value = "secret_value"
 
     with pytest.raises(TypeError):
