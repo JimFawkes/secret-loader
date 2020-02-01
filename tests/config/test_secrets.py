@@ -29,7 +29,6 @@ SM_RESPONSE_TEMPLATE = {
     "ARN": f"arn:aws:secretsmanager:eu-central-1:123567891234:secret:{ENV_VAR_NAME}-AbCdEf",
     "Name": ENV_VAR_NAME,
     "VersionId": "1a2bcd34-efab-5c67-89d1-234f5a6b78c9",
-    # "SecretString": '{"eu":{"USR":"eu_user_name","PW":"eu_password"},"us":{"USR":"us_user_name","PW":"us_password"}}',
     "SecretString": ENV_VAR_VALUE,
     "VersionStages": ["AWSCURRENT"],
     "CreatedDate": datetime.datetime(2020, 1, 19, 15, 17, 10, 957000),
@@ -52,7 +51,6 @@ SM_BINARY_RESPONSE_TEMPLATE = {
     "ARN": f"arn:aws:secretsmanager:eu-central-1:123567891234:secret:{ENV_VAR_NAME}-AbCdEf",
     "Name": ENV_VAR_NAME,
     "VersionId": "1a2bcd34-efab-5c67-89d1-234f5a6b78c9",
-    # "SecretString": '{"eu":{"USR":"eu_user_name","PW":"eu_password"},"us":{"USR":"us_user_name","PW":"us_password"}}',
     "SecretBinary": base64.b64encode(ENV_VAR_VALUE.encode()),
     "VersionStages": ["AWSCURRENT"],
     "CreatedDate": datetime.datetime(2020, 1, 19, 15, 17, 10, 957000),
@@ -299,17 +297,6 @@ def test_env_loader_fail_for_none_existing_variable():
         value = env_loader.load(env_var_name)
 
 
-# The default value should only be used after checking all loaders
-# Implement on CredentialLoader returned by Factory
-# def test_env_loader_use_default_for_none_existing_variable():
-#     env_loader = secrets.EnvLoader()
-#
-#     env_var_name = "MY_TEST_ENV_VAR"
-#     default_env_var = "some_default_value"
-#
-#     value = env_loader.load(env_var_name, default=default_env_var)
-#     assert value == default_env_var
-
 # ----------------------------------------------------------------------------
 # Test EnvFileLoader
 # ----------------------------------------------------------------------------
@@ -493,13 +480,6 @@ def test_credential_loader_raises_not_found_after_last_loader_failed():
         cred(credential_name)
 
     assert f"Could not load '{credential_name}' using loaders: [" in str(excption_info.value)
-
-
-# TODO: Review if this makes sense and if DFL should be tested for its structure
-# NOTE: Review this test, delete DEFAULT_LOADERS if test is not added again
-# def test_credential_loader_has_default_loaders():
-#     cred = secrets.CredentialLoader()
-#     assert secrets.DEFAULT_LOADERS == cred.loaders
 
 
 def test_credential_laoder_register_loader():

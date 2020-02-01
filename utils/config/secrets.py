@@ -82,8 +82,6 @@ class EnvFileLoader(EnvLoader):
 
 
 class AWSSecretsLoader(BaseLoader):
-    # TODO: Fix TypeAnnotations
-    # Not sure how to do type annotations for client
     def __init__(self, client=None, region_name="eu-central-1"):
         self.client = client or get_client("secretsmanager", region_name)
 
@@ -150,7 +148,6 @@ class CredentialLoader(BaseClass):
             f"Could not load '{credential_name}' using loaders: {self.loaders}"
         )
 
-    # TODO: FIXME: loader has no type annotation, I am not sure which type to use
     @staticmethod
     def _construct_loader(loader, *args, **kwargs):
         return loader(*args, **kwargs)
@@ -175,8 +172,6 @@ class CredentialLoader(BaseClass):
 
         return loader_list
 
-    # This could return multiple types (dict, str, int, float), dependent on the parser
-    # TODO: How can I efficiently compose a return type for this situation?
     def parse(self, value, /, *, parser=None):
         if parser is None:
             return self._parser(value)
