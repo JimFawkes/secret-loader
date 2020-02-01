@@ -3,6 +3,7 @@ import pytest
 from contextlib import contextmanager
 
 import boto3
+import base64
 
 import botocore.session
 from botocore.stub import Stubber, ANY
@@ -46,6 +47,28 @@ SM_RESPONSE_TEMPLATE = {
     },
 }
 
+
+SM_BINARY_RESPONSE_TEMPLATE = {
+    "ARN": f"arn:aws:secretsmanager:eu-central-1:123567891234:secret:{ENV_VAR_NAME}-AbCdEf",
+    "Name": ENV_VAR_NAME,
+    "VersionId": "1a2bcd34-efab-5c67-89d1-234f5a6b78c9",
+    # "SecretString": '{"eu":{"USR":"eu_user_name","PW":"eu_password"},"us":{"USR":"us_user_name","PW":"us_password"}}',
+    "SecretBinary": base64.b64encode(ENV_VAR_VALUE.encode()),
+    "VersionStages": ["AWSCURRENT"],
+    "CreatedDate": datetime.datetime(2020, 1, 19, 15, 17, 10, 957000),
+    "ResponseMetadata": {
+        "RequestId": "1ab2cd34-5e67-891f-23ab-45c6d78ef9a1",
+        "HTTPStatusCode": 200,
+        "HTTPHeaders": {
+            "date": "Wed, 01 Jan 2020 01:23:45 GMT",
+            "content-type": "application/x-amz-json-1.1",
+            "content-length": "363",
+            "connection": "keep-alive",
+            "x-amzn-requestid": "1ab2cd34-5e67-891f-23ab-45c6d78ef9a1",
+        },
+        "RetryAttempts": 0,
+    },
+}
 SM_EXPECTED_PARAMS = {"SecretId": ANY}
 
 
@@ -81,6 +104,24 @@ def get_stubbed_boto_client_error(
     stub.activate()
 
     return client
+
+
+@pytest.fixture(
+    params=[
+        "DecryptionFailureException",
+        "InternalServiceErrorException",
+        "InvalidParameterException",
+        "InvalidRequestException",
+        "ResourceNotFoundException",
+    ]
+)
+def sm_client_error(request):
+    return get_stubbed_boto_client_error(service_error_code=request.param)
+
+
+@pytest.fixture(params=[SM_RESPONSE_TEMPLATE, SM_BINARY_RESPONSE_TEMPLATE])
+def sm_client_response(request):
+    return get_stubbed_boto_client_response(response=request.param)
 
 
 def dummy_load_env_file(filepath, *args, **kwargs):
@@ -326,16 +367,17 @@ def test_aws_secrets_loader_takes_client():
     assert aws_secrets_loader.client is client
 
 
-def test_aws_secrets_loader_get_secret_value():
-    client = get_stubbed_boto_client_response()
+def test_aws_secrets_loader_get_secret_value(sm_client_response):
+    client = sm_client_response
     aws_secrets_loader = secrets.AWSSecretsLoader(client=client)
     value = aws_secrets_loader.load(ENV_VAR_NAME)
 
     assert value == ENV_VAR_VALUE
 
 
-def test_aws_secrets_loader_fail_for_none_existing_secret():
-    client = get_stubbed_boto_client_error()
+def test_aws_secrets_loader_fail_for_none_existing_secret(sm_client_error):
+    client = sm_client_error
+    # client = get_stubbed_boto_client_error()
     aws_secrets_loader = secrets.AWSSecretsLoader(client=client)
 
     with pytest.raises(secrets.CredentialNotFoundError):

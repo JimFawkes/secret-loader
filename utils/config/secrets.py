@@ -114,9 +114,11 @@ class EnvFileLoader(EnvLoader):
         self.load_env_file = load_env_file
         self.file_path = file_path or self.find_env_file()
 
-        self.load_env_file(self.file_path)
-
         super().__init__(os.getenv, *args, **kwargs)
+
+    def load(self, credential_name: str) -> str:
+        self.load_env_file(self.file_path)
+        return super().load(credential_name)
 
 
 class AWSSecretsLoader(BaseLoader):
@@ -155,7 +157,7 @@ class AWSSecretsLoader(BaseLoader):
             if "SecretString" in get_secret_value_response:
                 return get_secret_value_response["SecretString"]
             else:
-                return base64.b64decode(get_secret_value_response["SecretBinary"])
+                return base64.b64decode(get_secret_value_response["SecretBinary"]).decode()
 
     def load(self, credential_name: str) -> str:
         try:
@@ -229,7 +231,10 @@ class CredentialLoader(BaseClass):
         self.loaders.insert(0, constructed_loader)
 
 
-credential = CredentialLoader([EnvLoader])
+credential = CredentialLoader()
+credential.register("AWSSecretsManagerLoader", AWSSecretsLoader)
+credential.register("ENVFileLoader", EnvFileLoader)
+credential.register("ENVLoader", EnvLoader)
 
 # class Credential(Mapping):
 #     """Store a single Credential in the form of a key/value pair"""
