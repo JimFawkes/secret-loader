@@ -100,7 +100,9 @@ def get_stubbed_boto_client_error(
     client = botocore.session.get_session().create_client(service_name, region_name)
 
     stub = Stubber(client)
-    stub.add_client_error(method=method_name, expected_params=expected_params, service_error_code=service_error_code)
+    stub.add_client_error(
+        method=method_name, expected_params=expected_params, service_error_code=service_error_code
+    )
     stub.activate()
 
     return client
@@ -408,7 +410,12 @@ def test_credential_loader_pass_empty_loaders():
 
 def test_credential_loader_pass_dummy_loader_as_dict():
     loaders = [
-        {"name": "DummyLoader", "loader": DummyLoader, "args": (), "kwargs": {"raise_not_found": True},},
+        {
+            "name": "DummyLoader",
+            "loader": DummyLoader,
+            "args": (),
+            "kwargs": {"raise_not_found": True},
+        },
     ]
     cred = secrets.CredentialLoader(loaders=loaders)
 
