@@ -1,7 +1,19 @@
 """
     Think about caching the results to reduce the roudtrips to aws
 
-    TODO: Add doc strings
+    TODO:
+        - Add doc strings
+        - Add Input Loader
+            * Needs to be enabled differently because it might otherwise block
+              the execution and change the behaviour
+            * Add a flag when calling the credentials obj. to activate the user
+              input option
+            * This might be a time where a reorder or explicit loader ordering
+              is important - Maybe per credential? Dynamic?
+            * Set priorities for loaders?
+            * Call loaders by name?
+
+
 """
 import base64
 import dotenv
