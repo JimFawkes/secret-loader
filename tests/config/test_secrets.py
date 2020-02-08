@@ -215,6 +215,13 @@ def test_base_loader_has_repr():
     assert "BaseLoader(" in str(base_loader)
 
 
+def test_base_loader_pass_kwargs():
+    base_loader = secrets.BaseLoader()
+
+    with pytest.raises(NotImplementedError):
+        base_loader.load("SOME_VAR", some_dummy_var="abc", some_other_var="abc", some_int=43)
+
+
 # ----------------------------------------------------------------------------
 # Test DumyLoader
 # ----------------------------------------------------------------------------
@@ -224,7 +231,7 @@ class DummyLoader(secrets.BaseLoader):
     def __init__(self, raise_not_found=False):
         self.raise_not_found = raise_not_found
 
-    def load(self, credential_name):
+    def load(self, credential_name, **kwargs):
 
         if self.raise_not_found:
             raise secrets.CredentialNotFoundError(f"DummyLoader raise_not_found=True")
@@ -267,6 +274,17 @@ def test_dummy_loader_fail_if_forced():
     assert "raise_not_found" in str(exception_info.value)
 
 
+def test_dummy_loader_pass_kwargs():
+    dummy_loader = DummyLoader()
+    dummy_var_name = "MY_TEST_ENV_VAR"
+
+    value = dummy_loader.load(
+        dummy_var_name, some_dummy_var="abc", some_other_dummy="efg", some_int=543
+    )
+
+    assert True
+
+
 # ----------------------------------------------------------------------------
 # Test EnvLoader
 # ----------------------------------------------------------------------------
@@ -295,6 +313,15 @@ def test_env_loader_fail_for_none_existing_variable():
 
     with pytest.raises(secrets.CredentialNotFoundError):
         value = env_loader.load(env_var_name)
+
+
+def test_env_loader_pass_kwargs(monkeypatch):
+    monkeypatch.setenv(ENV_VAR_NAME, ENV_VAR_VALUE)
+
+    env_loader = secrets.EnvLoader()
+    value = env_loader.load(ENV_VAR_NAME, some_dummy_var="abc", some_other="efg", some_int=453)
+
+    assert True
 
 
 # ----------------------------------------------------------------------------
@@ -339,6 +366,18 @@ def test_env_file_loader_with_dummy_callables(monkeypatch):
     assert value == ENV_VAR_VALUE
 
 
+def test_env_file_loader_pass_kwargs(monkeypatch):
+    variable = "SOME_VAR"
+    monkeypatch.setenv(variable, variable)
+
+    env_file_loader = secrets.EnvFileLoader(dummy_load_env_file, dummy_find_env_file)
+    value = env_file_loader.load(
+        variable, some_dummy_var="abc", some_other_dummy="efg", some_int=453,
+    )
+
+    assert True
+
+
 # ----------------------------------------------------------------------------
 # Test AWSSecretsManagerLoader
 # ----------------------------------------------------------------------------
@@ -371,6 +410,16 @@ def test_aws_secrets_loader_fail_for_none_existing_secret(sm_client_error):
 
     with pytest.raises(secrets.CredentialNotFoundError):
         value = aws_secrets_loader.load("SOME_UNKNOWN_SECRET")
+
+
+def test_aws_secrets_loader_pass_kwargs_to_load(sm_client_response):
+    client = sm_client_response
+    aws_secrets_loader = secrets.AWSSecretsLoader(client=client)
+    value = aws_secrets_loader.load(
+        ENV_VAR_NAME, some_dummy_var="abc", some_other_dummy="efg", some_int=23
+    )
+
+    assert True
 
 
 # ----------------------------------------------------------------------------
@@ -566,3 +615,11 @@ def test_credential_loader_parser_on_call_must_be_keyword():
 
     with pytest.raises(TypeError):
         cred(ENV_VAR_NAME, lambda x: value)
+
+
+def test_credential_loader_pass_kwargs_to_call():
+    cred = secrets.CredentialLoader([(DummyLoader, (), {}),])
+
+    assert (
+        cred(ENV_VAR_NAME, some_dummy_var="abc", some_other_dummy="efg", some_int=1) == ENV_VAR_NAME
+    )

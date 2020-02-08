@@ -57,7 +57,7 @@ class BaseClass:
 
 
 class BaseLoader(BaseClass):
-    def load(self, credential_name):
+    def load(self, credential_name, **kwargs):
         raise NotImplementedError(f"A Loader needs to implement load(credential_name)")
 
 
@@ -65,7 +65,7 @@ class EnvLoader(BaseLoader):
     def __init__(self, getenv=os.getenv, *args, **kwargs):
         self.getenv = getenv
 
-    def load(self, credential_name):
+    def load(self, credential_name, **kwargs):
         value = self.getenv(credential_name)
         if value is None:
             raise CredentialNotFoundError(f"EnvLoader could not load {credential_name}")
@@ -88,7 +88,7 @@ class EnvFileLoader(EnvLoader):
 
         super().__init__(os.getenv, *args, **kwargs)
 
-    def load(self, credential_name):
+    def load(self, credential_name, **kwargs):
         self.load_env_file(self.file_path)
         return super().load(credential_name)
 
@@ -129,7 +129,7 @@ class AWSSecretsLoader(BaseLoader):
         else:
             return base64.b64decode(get_secret_value_response["SecretBinary"]).decode()
 
-    def load(self, credential_name):
+    def load(self, credential_name, **kwargs):
         try:
             return self._get_secret_value(credential_name)
         except ClientError as e:
@@ -144,14 +144,14 @@ class CredentialLoader(BaseClass):
         self.loaders = self._construct_loader_list(loaders)
         self._parser = parser
 
-    def __call__(self, credential_name, *, parser=None):
+    def __call__(self, credential_name, *, parser=None, **kwargs):
         if not self.loaders:
             raise NoLoaderConfiguredError(
                 f"{self} has no loader configured, loaders={self.loaders}"
             )
         for loader in self.loaders:
             try:
-                credential = loader.load(credential_name)
+                credential = loader.load(credential_name, **kwargs)
                 return self.parse(credential, parser=parser)
             except CredentialNotFoundError as e:
                 continue
