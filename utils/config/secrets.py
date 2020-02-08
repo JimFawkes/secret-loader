@@ -225,7 +225,11 @@ class CredentialLoader(BaseClass):
         self._loaders.append(constructed_loader)
 
 
+# Set default priorities in a somewhat sensible way.
+# Give Loaders with potential costs or long running a lower priority
+# Leave 0 free since it is the default
+# Give EnvLoader the highest priority
 credential = CredentialLoader()
-credential.register(AWSSecretsLoader)
-credential.register(EnvFileLoader)
-credential.register(EnvLoader)
+credential.register(AWSSecretsLoader, priority=-10)
+credential.register(EnvFileLoader, priority=-5)
+credential.register(EnvLoader, priority=5)
