@@ -19,6 +19,7 @@ import base64
 import dotenv
 import boto3.session
 from botocore.exceptions import ClientError
+import getpass
 
 import warnings
 import os
@@ -136,6 +137,19 @@ class AWSSecretsLoader(BaseLoader):
             raise CredentialNotFoundError(
                 f"Could not retrieve secret: {credential_name} from AWS SecretsManager"
             ) from e
+
+
+class InputLoader(BaseLoader):
+    def __init__(self, input=getpass.getpass):
+        self._input = input
+
+    def load(self, credential_name, prompt_input=False, **kwargs):
+        if prompt_input:
+            return self._input(f"Enter Value for {credential_name}: ")
+        else:
+            raise CredentialNotFoundError(
+                f"InputPrompt was set to '{prompt_input}' (default='False') for credential: {credential_name}."
+            )
 
 
 # TODO: Think about renaming this class

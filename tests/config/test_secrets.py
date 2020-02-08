@@ -8,6 +8,7 @@ import base64
 import botocore.session
 from botocore.stub import Stubber, ANY
 import datetime
+import getpass
 
 from utils.config import secrets
 
@@ -420,6 +421,77 @@ def test_aws_secrets_loader_pass_kwargs_to_load(sm_client_response):
     )
 
     assert True
+
+
+# ----------------------------------------------------------------------------
+# Test InputLoader
+# ----------------------------------------------------------------------------
+
+
+def test_input_loader_exits():
+    input_loader = secrets.InputLoader()
+    assert input_loader is not None
+
+
+def test_input_loader_fail_if_prompt_param_is_missing(monkeypatch):
+    secret_value = "some_secret"
+
+    input_loader = secrets.InputLoader()
+    monkeypatch.setattr("getpass.getpass", lambda: secret_value)
+    with pytest.raises(secrets.CredentialNotFoundError):
+        value = input_loader.load("SOME_SECRET_NAME")
+
+
+def test_input_loader_prompt_for_input(monkeypatch):
+    secret_name = "SOME_SECRET_NAME"
+    secret_value = "some_secret"
+
+    monkeypatch.setattr("getpass.getpass", lambda x: secret_value)
+    input_loader = secrets.InputLoader(input=getpass.getpass)
+    # monkeypatch.setattr(getpass, f"Enter Value for {secret_name}: ", lambda x: secret_value)
+    value = input_loader.load(secret_name, prompt_input=True)
+
+    assert value == secret_value
+
+
+def test_input_loader_pass_kwargs_to_load(monkeypatch):
+    secret_value = "some_secret"
+
+    monkeypatch.setattr("getpass.getpass", lambda x: secret_value)
+
+    input_loader = secrets.InputLoader(input=getpass.getpass)
+    value = input_loader.load(
+        "SOME_SECRET_NAME",
+        prompt_input=True,
+        some_dummy_var="abc",
+        some_other_var="efg",
+        some_int=546,
+    )
+
+    assert value == secret_value
+
+
+def test_input_loader_use_builtin_input_over_getpass(monkeypatch):
+    secret_name = "SOME_SECRET_NAME"
+    secret_value = "some_secret"
+    monkeypatch.setattr("builtins.input", lambda x: secret_value)
+
+    input_loader = secrets.InputLoader(input=input)
+    # monkeypatch.setattr(getpass, f"Enter Value for {secret_name}: ", lambda x: secret_value)
+    value = input_loader.load(secret_name, prompt_input=True)
+
+    assert value == secret_value
+
+
+def test_input_loader_pass_dummy_input_callable():
+    secret_name = "SOME_SECRET_NAME"
+    secret_value = "some_secret"
+
+    input_loader = secrets.InputLoader(input=lambda x: secret_value)
+    # monkeypatch.setattr(getpass, f"Enter Value for {secret_name}: ", lambda x: secret_value)
+    value = input_loader.load(secret_name, prompt_input=True)
+
+    assert value == secret_value
 
 
 # ----------------------------------------------------------------------------
