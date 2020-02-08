@@ -116,3 +116,4 @@ venv.bak/
 data/
 logs/
 *.bak
+tmp/
