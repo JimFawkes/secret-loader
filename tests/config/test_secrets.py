@@ -495,6 +495,42 @@ def test_input_loader_pass_dummy_input_callable():
 
 
 # ----------------------------------------------------------------------------
+# Test LoaderContainer
+# ----------------------------------------------------------------------------
+
+
+def test_loader_container_exists():
+    loader_obj = "dummy_loader"
+    priority = 987
+    loader_class = "dummy_class"
+    args = ()
+    kwargs = {}
+
+    loader = secrets.LoaderContainer(
+        loader=loader_obj, priority=priority, loader_class=loader_class, args=args, kwargs=kwargs
+    )
+
+    assert isinstance(loader, secrets.LoaderContainer)
+    assert loader.loader == loader_obj
+    assert loader.priority == priority
+    assert loader.loader_class == loader_class
+
+
+def test_loader_container_fails_for_missing_field():
+    loader_obj = "dummy_loader"
+    priority = 987
+    loader_class = "dummy_class"
+    args = ()
+    kwargs = {}
+
+    with pytest.raises(TypeError):
+        loader = secrets.LoaderContainer(loader=loader_obj,)
+
+    with pytest.raises(TypeError):
+        loader = secrets.LoaderContainer(loader=loader_obj, priority=priority,)
+
+
+# ----------------------------------------------------------------------------
 # Test CredentialLoaderFactory
 # ----------------------------------------------------------------------------
 
@@ -518,41 +554,43 @@ def test_credential_loader_pass_empty_loaders():
 
 def test_credential_loader_pass_dummy_loader_as_dict():
     loaders = [
-        {"loader": DummyLoader, "args": (), "kwargs": {"raise_not_found": True},},
+        {"loader": DummyLoader, "priority": 0, "args": (), "kwargs": {"raise_not_found": True},},
     ]
     cred = secrets.CredentialLoader(loaders=loaders)
 
-    assert isinstance(cred.loaders[0], DummyLoader)
-    assert cred.loaders[0].raise_not_found == True
+    assert isinstance(cred.loaders[0].loader, DummyLoader)
+    assert cred.loaders[0].loader.raise_not_found == True
 
 
 def test_credential_loader_pass_dummy_loader_as_callable():
     loaders = [DummyLoader]
     cred = secrets.CredentialLoader(loaders=loaders)
 
-    assert isinstance(cred.loaders[0], DummyLoader)
-    assert cred.loaders[0].raise_not_found == False
+    assert isinstance(cred.loaders[0].loader, DummyLoader)
+    assert cred.loaders[0].loader.raise_not_found == False
 
 
 def test_credential_loader_pass_dummy_loader_as_tuple():
     loaders = [
-        (DummyLoader, (), {"raise_not_found": True}),
+        (DummyLoader, 1, (), {"raise_not_found": True}),
     ]
     cred = secrets.CredentialLoader(loaders=loaders)
 
-    assert isinstance(cred.loaders[0], DummyLoader)
-    assert cred.loaders[0].raise_not_found == True
+    assert isinstance(cred.loaders[0].loader, DummyLoader)
+    assert cred.loaders[0].loader.raise_not_found == True
 
 
+# TODO: Verify/Modify/Refactor tests for construct_loader list/obj to expect
+# the LoaderContainer type
 def test_credential_loader_construct_loader_list():
     loaders = [
-        (DummyLoader, (), {"raise_not_found": True}),
+        (DummyLoader, 0, (), {"raise_not_found": True}),
     ]
     cred = secrets.CredentialLoader(loaders=[])
     loader_list = cred._construct_loader_list(loaders)
 
-    assert isinstance(loader_list[0], DummyLoader)
-    assert loader_list[0].raise_not_found == True
+    assert isinstance(loader_list[0].loader, DummyLoader)
+    assert loader_list[0].loader.raise_not_found == True
 
 
 def test_credential_loader_construct_loader_list_fail_for_wrong_type():
@@ -563,15 +601,42 @@ def test_credential_loader_construct_loader_list_fail_for_wrong_type():
         loader_list = cred._construct_loader_list(loaders)
 
 
-def test_credential_loader_construct_loader():
+def test_credential_loader_construct_loader_returns_loader_container_instance():
+    loader_class = DummyLoader
+
+    cred = secrets.CredentialLoader(loaders=[])
+    loader = cred._construct_loader(loader=loader_class)
+
+    assert isinstance(loader, secrets.LoaderContainer)
+
+
+def test_credential_loader_construct_loader_default_priority_is_zero():
+    loader_class = DummyLoader
+
+    cred = secrets.CredentialLoader(loaders=[])
+    loader = cred._construct_loader(loader=loader_class)
+
+    assert loader.priority == 0
+
+
+def test_credential_loader_construct_loader_set_priority():
+    loader_class = DummyLoader
+
+    cred = secrets.CredentialLoader(loaders=[])
+    loader = cred._construct_loader(loader=loader_class, priority=3)
+
+    assert loader.priority == 3
+
+
+def test_credential_loader_construct_loader_container_contains_expected_loader():
     loader_class = DummyLoader
     kwargs = {"raise_not_found": True}
 
     cred = secrets.CredentialLoader(loaders=[])
     loader = cred._construct_loader(loader=loader_class, **kwargs)
 
-    assert isinstance(loader, DummyLoader)
-    assert loader.raise_not_found == True
+    assert isinstance(loader.loader, DummyLoader)
+    assert loader.loader.raise_not_found == True
 
 
 def test_credential_loader_with_dummy_loader():
@@ -592,7 +657,7 @@ def test_credential_loader_empty_loaders_raises_no_loaders():
 
 def test_credential_loader_raises_not_found_after_last_loader_failed():
     loaders = [
-        (DummyLoader, (), {"raise_not_found": True}),
+        (DummyLoader, 3, (), {"raise_not_found": True}),
     ]
     cred = secrets.CredentialLoader(loaders=loaders)
     credential_name = "SOME_DUMMY_CREDENTIAL"
@@ -607,10 +672,21 @@ def test_credential_laoder_register_loader():
     loaders = []
     cred = secrets.CredentialLoader(loaders=loaders)
     loader = DummyLoader
-    cred.register(loader=loader)
+    cred.register(loader=loader, priority=2)
 
-    assert isinstance(cred.loaders[0], DummyLoader)
+    assert isinstance(cred.loaders[0].loader, DummyLoader)
     assert len(cred.loaders) == 1
+
+
+def test_credential_laoder_priority_for_registered_loader():
+    loaders = []
+    priority = 3
+
+    cred = secrets.CredentialLoader(loaders=loaders)
+    loader = DummyLoader
+    cred.register(loader=loader, priority=priority)
+
+    assert cred.loaders[0].priority == priority
 
 
 def test_credential_laoder_register_loader_with_kwargs():
@@ -619,9 +695,9 @@ def test_credential_laoder_register_loader_with_kwargs():
     loader = DummyLoader
     cred.register(loader=loader, raise_not_found=True)
 
-    assert isinstance(cred.loaders[0], DummyLoader)
+    assert isinstance(cred.loaders[0].loader, DummyLoader)
     assert len(cred.loaders) == 1
-    assert cred.loaders[0].raise_not_found == True
+    assert cred.loaders[0].loader.raise_not_found == True
 
 
 def test_credential_laoder_register_loader_order():
@@ -630,10 +706,10 @@ def test_credential_laoder_register_loader_order():
 
     assert len(cred.loaders) == len(default_loaders)
 
-    cred.register(loader=DummyLoader)
+    cred.register(loader=DummyLoader, priority=1)
 
     assert len(cred.loaders) == len(default_loaders) + 1
-    assert isinstance(cred.loaders[0], DummyLoader)
+    assert isinstance(cred.loaders[0].loader, DummyLoader)
 
 
 def test_credential():
@@ -671,18 +747,18 @@ def test_credential_loader_last_parser_beats_init_parser():
 def test_credential_loader_parser_must_be_keyword():
 
     with pytest.raises(TypeError):
-        cred = secrets.CredentialLoader([(DummyLoader, (), {}),], lambda x: x)
+        cred = secrets.CredentialLoader([(DummyLoader, 4, (), {}),], lambda x: x)
 
 
 def test_credential_loader_use_parser_passed_to_call():
-    cred = secrets.CredentialLoader([(DummyLoader, (), {}),])
+    cred = secrets.CredentialLoader([(DummyLoader, 3, (), {}),])
     value = "secret_value"
 
     assert cred(ENV_VAR_NAME, parser=lambda x: value) == value
 
 
 def test_credential_loader_parser_on_call_must_be_keyword():
-    cred = secrets.CredentialLoader([(DummyLoader, (), {}),])
+    cred = secrets.CredentialLoader([(DummyLoader, 3, (), {}),])
     value = "secret_value"
 
     with pytest.raises(TypeError):
@@ -690,8 +766,53 @@ def test_credential_loader_parser_on_call_must_be_keyword():
 
 
 def test_credential_loader_pass_kwargs_to_call():
-    cred = secrets.CredentialLoader([(DummyLoader, (), {}),])
+    cred = secrets.CredentialLoader([(DummyLoader, 3, (), {}),])
 
     assert (
         cred(ENV_VAR_NAME, some_dummy_var="abc", some_other_dummy="efg", some_int=1) == ENV_VAR_NAME
     )
+
+
+def test_credential_loader_pass_loader_as_tuple_requires_four_elements():
+    with pytest.raises(secrets.ConstructLoaderError):
+        cred = secrets.CredentialLoader([(DummyLoader,),])
+
+    with pytest.raises(secrets.ConstructLoaderError):
+        cred = secrets.CredentialLoader([(DummyLoader, 0,),])
+
+    with pytest.raises(secrets.ConstructLoaderError):
+        cred = secrets.CredentialLoader([(DummyLoader, 0, ()),])
+
+    with pytest.raises(secrets.ConstructLoaderError):
+        cred = secrets.CredentialLoader([(DummyLoader, 0, (), {}, "other"),])
+
+    cred = secrets.CredentialLoader([(DummyLoader, 0, (), {}),])
+
+    assert cred is not None
+
+
+def test_credential_loader_highest_priority_loader_comes_first():
+    high_priority = 3
+    medium_priority = 2
+    low_priority = 0
+    cred = secrets.CredentialLoader(
+        [
+            (DummyLoader, medium_priority, (), {}),
+            (DummyLoader, low_priority, (), {}),
+            (DummyLoader, high_priority, (), {}),
+        ]
+    )
+
+    cred_2 = secrets.CredentialLoader(
+        [
+            (DummyLoader, high_priority, (), {}),
+            (DummyLoader, low_priority, (), {}),
+            (DummyLoader, medium_priority, (), {}),
+        ]
+    )
+
+    assert cred.loaders[0].priority == high_priority
+    assert cred.loaders[-1].priority == low_priority
+
+    assert cred_2.loaders[0].priority == high_priority
+    assert cred_2.loaders[-1].priority == low_priority

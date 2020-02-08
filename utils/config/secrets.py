@@ -4,13 +4,6 @@
     TODO:
         - Add doc strings
         - Add Input Loader
-            * Needs to be enabled differently because it might otherwise block
-              the execution and change the behaviour
-            * Add a flag when calling the credentials obj. to activate the user
-              input option
-            * This might be a time where a reorder or explicit loader ordering
-              is important - Maybe per credential? Dynamic?
-            * Set priorities for loaders?
             * Call loaders by name?
 
 
@@ -25,6 +18,7 @@ import warnings
 import os
 
 from collections.abc import Mapping
+from collections import namedtuple
 from pathlib import Path
 
 
@@ -152,10 +146,14 @@ class InputLoader(BaseLoader):
             )
 
 
+LoaderContainer = namedtuple(
+    "LoaderContainer", ("loader", "priority", "loader_class", "args", "kwargs")
+)
+
 # TODO: Think about renaming this class
 class CredentialLoader(BaseClass):
     def __init__(self, loaders=[], *, parser=lambda x: x):
-        self.loaders = self._construct_loader_list(loaders)
+        self._loaders = self._construct_loader_list(loaders)
         self._parser = parser
 
     def __call__(self, credential_name, *, parser=None, **kwargs):
@@ -165,7 +163,7 @@ class CredentialLoader(BaseClass):
             )
         for loader in self.loaders:
             try:
-                credential = loader.load(credential_name, **kwargs)
+                credential = loader.loader.load(credential_name, **kwargs)
                 return self.parse(credential, parser=parser)
             except CredentialNotFoundError as e:
                 continue
@@ -175,8 +173,14 @@ class CredentialLoader(BaseClass):
         )
 
     @staticmethod
-    def _construct_loader(loader, *args, **kwargs):
-        return loader(*args, **kwargs)
+    def _construct_loader(loader, priority=0, *args, **kwargs):
+        return LoaderContainer(
+            loader=loader(*args, **kwargs),
+            priority=priority,
+            loader_class=loader,
+            args=args,
+            kwargs=kwargs,
+        )
 
     @staticmethod
     def _construct_loader_list(loaders):
@@ -191,12 +195,24 @@ class CredentialLoader(BaseClass):
                     )
                 )
             elif isinstance(loader, tuple):
-                loader_, args, kwargs = loader
-                loader_list.append(CredentialLoader._construct_loader(loader_, *args, **kwargs))
+                try:
+                    loader_, priority, args, kwargs = loader
+                except ValueError as e:
+                    raise ConstructLoaderError(
+                        f"Could not construct loader for '{loader}'. Hint: when passing in a tuple to construct a loader, four elements are expected (loader_class, priority, args, kwargs)"
+                    ) from e
+                loader_list.append(
+                    CredentialLoader._construct_loader(loader_, priority, *args, **kwargs)
+                )
             else:
                 raise ConstructLoaderError(f"Could not construct loader for '{loader}'")
 
         return loader_list
+
+    @property
+    def loaders(self):
+        # NOTE: For loaders with the same priority, there is no guaranteed order
+        return sorted(self._loaders, key=lambda x: x.priority, reverse=True)
 
     def parse(self, value, /, *, parser=None):
         if parser is None:
@@ -204,9 +220,9 @@ class CredentialLoader(BaseClass):
         else:
             return parser(value)
 
-    def register(self, loader, *args, **kwargs):
-        constructed_loader = self._construct_loader(loader, *args, **kwargs)
-        self.loaders.insert(0, constructed_loader)
+    def register(self, loader, priority=0, *args, **kwargs):
+        constructed_loader = self._construct_loader(loader, priority, *args, **kwargs)
+        self._loaders.append(constructed_loader)
 
 
 credential = CredentialLoader()
