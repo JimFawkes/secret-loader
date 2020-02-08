@@ -3,6 +3,8 @@
 
     TODO:
         - Add doc strings
+        - Add logs
+            * Add log when constructing InputLoader about the special case
         - Add Input Loader
             * Call loaders by name?
 
