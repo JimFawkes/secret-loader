@@ -4,19 +4,21 @@ Define goals and todos for that version.
 
 ## v0.1
 **GOAL:** _Write Core Functionality_
- - [x] Add Credential Loader Machinery
+ - [x] Add Secret Loader Machinery
  - [x] Add Env Variable Loader
  - [x] Add Env File Loader
- - [x] Add AWS SecretsManager Secret Loader
+ - [x] Add AWS SecretsManager SecretLoader
  - [x] Have >95% Test Coverage
 
-_Completed Date and version tag link_
+Completed March 13th 2020
+
+:bookmark: Tag: [v0.1](https://github.com/JimFawkes/secret-loader/releases/tag/v0.1)
 
 --------
 
 ## v0.2
-**GOAL:** _Add CLI to load credentials_
- - [ ] Allow credentials to be retrieved for all or a specific Loader
+**GOAL:** _Add CLI to load secrets_
+ - [ ] Allow secrets to be retrieved for all or a specific Loader
  - [ ] Add a method to configure the CLI Tool to use a specific order of Loaders
  - [ ] Find a way to easily inlcude Custom 3rd Party Loaders
  - [ ] Add proper Help message
