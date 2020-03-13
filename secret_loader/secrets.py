@@ -31,8 +31,8 @@ def get_client(service_name, region_name):
     return client
 
 
-class CredentialNotFoundError(Exception):
-    """Could not load Credential"""
+class SecretNotFoundError(Exception):
+    """Could not load Secret"""
 
 
 class NoLoaderConfiguredError(Exception):
@@ -43,7 +43,7 @@ class ConstructLoaderError(Exception):
     """Could not construct loader"""
 
 
-class CredentialMutabilityError(Exception):
+class SecretMutabilityError(Exception):
     """Encountered a mutable type"""
 
 
@@ -54,18 +54,18 @@ class BaseClass:
 
 
 class BaseLoader(BaseClass):
-    def load(self, credential_name, **kwargs):
-        raise NotImplementedError(f"A Loader needs to implement load(credential_name)")
+    def load(self, secret_name, **kwargs):
+        raise NotImplementedError(f"A Loader needs to implement load(secret_name)")
 
 
 class EnvLoader(BaseLoader):
     def __init__(self, getenv=os.getenv, *args, **kwargs):
         self.getenv = getenv
 
-    def load(self, credential_name, **kwargs):
-        value = self.getenv(credential_name)
+    def load(self, secret_name, **kwargs):
+        value = self.getenv(secret_name)
         if value is None:
-            raise CredentialNotFoundError(f"EnvLoader could not load {credential_name}")
+            raise SecretNotFoundError(f"EnvLoader could not load {secret_name}")
         return value
 
 
@@ -85,9 +85,9 @@ class EnvFileLoader(EnvLoader):
 
         super().__init__(os.getenv, *args, **kwargs)
 
-    def load(self, credential_name, **kwargs):
+    def load(self, secret_name, **kwargs):
         self.load_env_file(self.file_path)
-        return super().load(credential_name)
+        return super().load(secret_name)
 
 
 class AWSSecretsLoader(BaseLoader):
@@ -126,12 +126,12 @@ class AWSSecretsLoader(BaseLoader):
         else:
             return base64.b64decode(get_secret_value_response["SecretBinary"]).decode()
 
-    def load(self, credential_name, **kwargs):
+    def load(self, secret_name, **kwargs):
         try:
-            return self._get_secret_value(credential_name)
+            return self._get_secret_value(secret_name)
         except ClientError as e:
-            raise CredentialNotFoundError(
-                f"Could not retrieve secret: {credential_name} from AWS SecretsManager"
+            raise SecretNotFoundError(
+                f"Could not retrieve secret: {secret_name} from AWS SecretsManager"
             ) from e
 
 
@@ -139,12 +139,12 @@ class InputLoader(BaseLoader):
     def __init__(self, input=getpass.getpass):
         self._input = input
 
-    def load(self, credential_name, prompt_input=False, **kwargs):
+    def load(self, secret_name, prompt_input=False, **kwargs):
         if prompt_input:
-            return self._input(f"Enter Value for {credential_name}: ")
+            return self._input(f"Enter Value for {secret_name}: ")
         else:
-            raise CredentialNotFoundError(
-                f"InputPrompt was set to '{prompt_input}' (default='False') for credential: {credential_name}."
+            raise SecretNotFoundError(
+                f"InputPrompt was set to '{prompt_input}' (default='False') for secret: {secret_name}."
             )
 
 
@@ -153,26 +153,24 @@ LoaderContainer = namedtuple(
 )
 
 # TODO: Think about renaming this class
-class CredentialLoader(BaseClass):
+class SecretLoader(BaseClass):
     def __init__(self, loaders=[], *, parser=lambda x: x):
         self._loaders = self._construct_loader_list(loaders)
         self._parser = parser
 
-    def __call__(self, credential_name, *, parser=None, **kwargs):
+    def __call__(self, secret_name, *, parser=None, **kwargs):
         if not self.loaders:
             raise NoLoaderConfiguredError(
                 f"{self} has no loader configured, loaders={self.loaders}"
             )
         for loader in self.loaders:
             try:
-                credential = loader.loader.load(credential_name, **kwargs)
-                return self.parse(credential, parser=parser)
-            except CredentialNotFoundError as e:
+                secret = loader.loader.load(secret_name, **kwargs)
+                return self.parse(secret, parser=parser)
+            except SecretNotFoundError as e:
                 continue
 
-        raise CredentialNotFoundError(
-            f"Could not load '{credential_name}' using loaders: {self.loaders}"
-        )
+        raise SecretNotFoundError(f"Could not load '{secret_name}' using loaders: {self.loaders}")
 
     @staticmethod
     def _construct_loader(loader, priority=0, *args, **kwargs):
@@ -189,10 +187,10 @@ class CredentialLoader(BaseClass):
         loader_list = []
         for loader in loaders:
             if callable(loader):
-                loader_list.append(CredentialLoader._construct_loader(loader))
+                loader_list.append(SecretLoader._construct_loader(loader))
             elif isinstance(loader, dict):
                 loader_list.append(
-                    CredentialLoader._construct_loader(
+                    SecretLoader._construct_loader(
                         loader["loader"], *loader["args"], **loader["kwargs"]
                     )
                 )
@@ -204,7 +202,7 @@ class CredentialLoader(BaseClass):
                         f"Could not construct loader for '{loader}'. Hint: when passing in a tuple to construct a loader, four elements are expected (loader_class, priority, args, kwargs)"
                     ) from e
                 loader_list.append(
-                    CredentialLoader._construct_loader(loader_, priority, *args, **kwargs)
+                    SecretLoader._construct_loader(loader_, priority, *args, **kwargs)
                 )
             else:
                 raise ConstructLoaderError(f"Could not construct loader for '{loader}'")
@@ -231,7 +229,7 @@ class CredentialLoader(BaseClass):
 # Give Loaders with potential costs or long running a lower priority
 # Leave 0 free since it is the default
 # Give EnvLoader the highest priority
-credential = CredentialLoader()
-credential.register(AWSSecretsLoader, priority=-10)
-credential.register(EnvFileLoader, priority=-5)
-credential.register(EnvLoader, priority=5)
+secret = SecretLoader()
+secret.register(AWSSecretsLoader, priority=-10)
+secret.register(EnvFileLoader, priority=-5)
+secret.register(EnvLoader, priority=5)
