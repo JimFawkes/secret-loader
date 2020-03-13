@@ -48,3 +48,12 @@ def test_secret_loader_cli(mock_secret, capsys):
     cleaned_output = captured.out.replace("\n", "")
 
     assert cleaned_output == secret_value
+
+
+@patch("secret_loader.cli.secret_loader_cli")
+def test_cli(mock_secret_loader_cli):
+    argument = "name"
+    cli.cli(parser=lambda: argument)
+
+    assert mock_secret_loader_cli.called
+    mock_secret_loader_cli.assert_called_with(args=argument)

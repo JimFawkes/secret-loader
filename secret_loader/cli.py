@@ -33,7 +33,7 @@ parser.add_argument(
 parser.add_argument("--fail", help="Fail if Secret is not Found", action="store_true")
 
 
-def secret_loader_cli(args=parser.parse_args()):
+def secret_loader_cli(args):
     try:
         print(secret(args.name))
     except SecretNotFoundError as e:
@@ -41,3 +41,7 @@ def secret_loader_cli(args=parser.parse_args()):
             raise e
         else:
             pass
+
+
+def cli(parser=parser.parse_args):
+    secret_loader_cli(args=parser())
