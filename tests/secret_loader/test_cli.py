@@ -50,6 +50,42 @@ def test_secret_loader_cli(mock_secret, capsys):
     assert cleaned_output == secret_value
 
 
+@patch("secret_loader.cli.secret")
+def test_secret_loader_cli_fail_silently(mock_secret, capsys):
+    secret_name = "secret_name"
+    secret_value = "secret_value"
+    mock_secret.side_effect = secrets.SecretNotFoundError()
+
+    class MockArgs:
+        def __init__(self, name, fail=False):
+            self.name = name
+            self.fail = fail
+
+    args = MockArgs(secret_name)
+    cli.secret_loader_cli(args)
+
+    captured = capsys.readouterr()
+    cleaned_output = captured.out.replace("\n", "")
+
+    assert cleaned_output == ""
+
+
+@patch("secret_loader.cli.secret")
+def test_secret_loader_cli_fail(mock_secret, capsys):
+    secret_name = "secret_name"
+    secret_value = "secret_value"
+    mock_secret.side_effect = secrets.SecretNotFoundError()
+
+    class MockArgs:
+        def __init__(self, name, fail=True):
+            self.name = name
+            self.fail = fail
+
+    args = MockArgs(secret_name)
+    with pytest.raises(secrets.SecretNotFoundError):
+        cli.secret_loader_cli(args)
+
+
 @patch("secret_loader.cli.secret_loader_cli")
 def test_cli(mock_secret_loader_cli):
     argument = "name"
