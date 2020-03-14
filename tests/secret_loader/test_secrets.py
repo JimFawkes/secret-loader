@@ -114,6 +114,7 @@ def get_stubbed_boto_client_error(
         "InvalidParameterException",
         "InvalidRequestException",
         "ResourceNotFoundException",
+        "UnrecognizedClientException",
     ]
 )
 def sm_client_error(request):

@@ -118,6 +118,9 @@ class AWSSecretsLoader(BaseLoader):
                 # We can't find the resource that you asked for.
                 # Deal with the exception here, and/or rethrow at your discretion.
                 raise e
+            else:
+                # UnrecognizedClientException: The security token included in the request is invalid.
+                raise e
 
         # Decrypts secret using the associated KMS CMK.
         # Depending on whether the secret is a string or binary, one of these fields will be populated.
