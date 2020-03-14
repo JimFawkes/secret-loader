@@ -19,7 +19,8 @@ Completed March 13th 2020
 ## v0.2
 **GOAL:** _Add CLI to load secrets_
  - [x] Allow secrets to be retrieved for all or a specific Loader
- - [ ] Add a method to configure the CLI Tool to use a specific order of Loaders
+ - [ ] Add option to add custom loader with specific priority
+ - [ ] Add option to list all registered loaders with their priority
  - [x] Find a way to easily inlcude Custom 3rd Party Loaders
  - [x] Add proper Help message
 
@@ -53,7 +54,7 @@ _Completed Date and version tag link_
 
 --------
 
-## v0.5
+## v1.0
 **GOAL:** _Package and Publish Project_
  - [ ] Package the Project
  - [ ] Add a Logo for the Project
@@ -61,3 +62,7 @@ _Completed Date and version tag link_
 _Completed Date and version tag link_
 
 --------
+
+# Backlog Potential Enhancements
+ - [ ] Allow Users to configure cli via config file (add multiple custom loaders, change priority)
+ - [ ] Enable some results parser options for CLI
