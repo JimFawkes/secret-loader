@@ -16,6 +16,7 @@ Version v0.1 - March 2020 - Jim Fawkes - src: github.com/JimFawkes/secret-loader
 """
 
 import argparse
+import importlib
 
 from secret_loader import secrets
 
@@ -42,13 +43,30 @@ parser.add_argument(
     "--loader", help="Specify a Loader to use", choices=available_loaders.keys(),
 )
 
+parser.add_argument(
+    "--custom_loader", help="Use custom Loader, specified as an importable string", type=str
+)
+
+
+def get_custom_loader(loader_path):
+    module_path, loader_name = loader_path.rsplit(".", 1)
+    custom_module = importlib.import_module(module_path)
+    loader = getattr(custom_module, loader_name)
+    return loader
+
 
 def get_secret_loader(args):
-    if args.loader:
+    def clean_loader(loader):
         secret = secrets.SecretLoader()
-        secret.register(available_loaders[args.loader])
+        secret.register(loader)
         return secret
 
+    if args.custom_loader:
+        loader = get_custom_loader(args.custom_loader)
+        return clean_loader(loader)
+    elif args.loader:
+        loader = available_loaders[args.loader]
+        return clean_loader(loader)
     else:
         return secrets.secret
 
