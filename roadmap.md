@@ -43,9 +43,11 @@ _Completed Date and version tag link_
 --------
 
 ## v0.4
-**GOAL:** _Refactor Tests_
+**GOAL:** _Refactor Tests & Add tox_
  - [ ] Remove all unnecessary tests
  - [ ] Structure the Test Files better
+ - [ ] Refactor project to make it compatible for min 3.7+ (currently 3.8+)
+ - [ ] Use tox to test for all supported python versions
 
 _Completed Date and version tag link_
 
