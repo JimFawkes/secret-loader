@@ -9,7 +9,7 @@ Flexible Secret Loader
 ```pytest
 python -m secrets_loader --help
 
-usage: secret_loader [-h] --name NAME [--fail]
+usage: secret_loader [-h] --name NAME [--fail] [--loader {EnvLoader,EnvFileLoader,AWSSecretsLoader}]
 
 Secret-Loader
 
@@ -26,6 +26,8 @@ optional arguments:
   -h, --help            show this help message and exit
   --name NAME, -n NAME  Name of Secret to Load
   --fail                Fail if Secret is not Found
+  --loader {EnvLoader,EnvFileLoader,AWSSecretsLoader}
+                        Specify a Loader to use
 
 Version v0.1 - March 2020 - Jim Fawkes - src: github.com/JimFawkes/secret-loader
 
