@@ -117,3 +117,4 @@ data/
 logs/
 *.bak
 tmp/
+resources/

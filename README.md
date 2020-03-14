@@ -33,6 +33,10 @@ Version v0.1 - March 2020 - Jim Fawkes - src: github.com/JimFawkes/secret-loader
 
 ```
 
+# Examples for CLI Usage
+![secret_loader_cli_demo](docs/img/secret_loader_cli_demo_4.png)
+
+
 ## How to run the tests
 ```bash
 pytest

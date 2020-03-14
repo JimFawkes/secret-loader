@@ -18,23 +18,25 @@ Completed March 13th 2020
 
 ## v0.2
 **GOAL:** _Add CLI to load secrets_
- - [ ] Allow secrets to be retrieved for all or a specific Loader
+ - [x] Allow secrets to be retrieved for all or a specific Loader
  - [ ] Add a method to configure the CLI Tool to use a specific order of Loaders
  - [ ] Find a way to easily inlcude Custom 3rd Party Loaders
- - [ ] Add proper Help message
+ - [x] Add proper Help message
 
 _Completed Date and version tag link_
 
 --------
 
 ## v0.3
-**GOAL:** _Add documentation_
+**GOAL:** _Add documentation & Logs_
  - [ ] Add proper documentation in SKLearn Style to all Code
  - [ ] Add Installation Guide to Readme
  - [ ] Add How-To for module
  - [ ] Add How-To for CLI
  - [ ] Add examples
  - [ ] Add gifs to How-To
+ - [ ] Add proper Log-Config for CLI
+ - [ ] Add Log Config for library
 
 _Completed Date and version tag link_
 
