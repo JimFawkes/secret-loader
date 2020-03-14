@@ -44,7 +44,9 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--custom_loader", help="Use custom Loader, specified as an importable string", type=str
+    "--custom_loader",
+    help="Use custom Loader, specified as an importable string e.g., 'some.module.CustomLoader'",
+    type=str,
 )
 
 

@@ -20,7 +20,7 @@ Completed March 13th 2020
 **GOAL:** _Add CLI to load secrets_
  - [x] Allow secrets to be retrieved for all or a specific Loader
  - [ ] Add a method to configure the CLI Tool to use a specific order of Loaders
- - [ ] Find a way to easily inlcude Custom 3rd Party Loaders
+ - [x] Find a way to easily inlcude Custom 3rd Party Loaders
  - [x] Add proper Help message
 
 _Completed Date and version tag link_
