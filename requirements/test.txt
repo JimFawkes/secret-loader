@@ -2,4 +2,4 @@
 -r base.txt	
 
 pytest==5.2.2
-
+tox==3.14.5
