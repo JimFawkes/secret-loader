@@ -11,12 +11,14 @@ The secrets-loader will try to load a secret from a list of places:
 The result is printed to standard out, so besure to use this wisely.
 
 """
+
 epilog = """
 Version v0.1 - March 2020 - Jim Fawkes - src: github.com/JimFawkes/secret-loader
 """
 
 import argparse
 import importlib
+import sys
 
 from secret_loader import secrets
 
@@ -34,7 +36,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    "--name", "-n", help="Name of Secret to Load", type=str, required=True,
+    "--name", "-n", help="Name of Secret to Load", type=str,
 )
 
 parser.add_argument("--fail", help="Fail if Secret is not Found", action="store_true")
@@ -49,12 +51,24 @@ parser.add_argument(
     type=str,
 )
 
+parser.add_argument(
+    "--list_loaders", "-l", help="List all currently available loaders", action="store_true",
+)
+
 
 def get_custom_loader(loader_path):
     module_path, loader_name = loader_path.rsplit(".", 1)
     custom_module = importlib.import_module(module_path)
     loader = getattr(custom_module, loader_name)
     return loader
+
+
+def list_loaders(args):
+    print()
+    print(f"Count) name : priority")
+    print(f"-----) ---- : --------")
+    for idx, loader in enumerate(args.secret.loaders):
+        print(f"{idx}) {loader.loader_class.__name__} : {loader.priority}")
 
 
 def get_secret_loader(args):
@@ -73,10 +87,22 @@ def get_secret_loader(args):
         return secrets.secret
 
 
+def parse_args(args):
+    args.secret = get_secret_loader(args)
+
+    if args.list_loaders:
+        list_loaders(args)
+        sys.exit(0)
+
+    elif not args.name:
+        parser.error("A name is required (--name NAME)")
+
+    return args
+
+
 def secret_loader_cli(args):
-    secret = get_secret_loader(args)
     try:
-        print(secret(args.name))
+        print(args.secret(args.name))
     except secrets.SecretNotFoundError as e:
         if args.fail:
             raise e
@@ -85,4 +111,5 @@ def secret_loader_cli(args):
 
 
 def cli(parser=parser.parse_args):
-    secret_loader_cli(args=parser())
+    args = parse_args(parser())
+    secret_loader_cli(args)
