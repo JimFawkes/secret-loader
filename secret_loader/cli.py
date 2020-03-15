@@ -45,10 +45,16 @@ parser.add_argument(
     "--loader", help="Specify a Loader to use", choices=available_loaders.keys(),
 )
 
+# Currently this appears in the help message as one or more possible args. However
+# Only one or two values are valid when this arg is passed.
+# Not sure how to properly display this.
+# Using `nargs=2,` does not solve the issue, because I want to allow a single arg to be valid
 parser.add_argument(
     "--custom_loader",
     help="Use custom Loader, specified as an importable string e.g., 'some.module.CustomLoader'",
     type=str,
+    nargs="+",
+    metavar=("CUSTOM_LOADER", "PRIORITY"),
 )
 
 parser.add_argument(
@@ -72,14 +78,17 @@ def list_loaders(args):
 
 
 def get_secret_loader(args):
-    def clean_loader(loader):
+    def clean_loader(loader, priority=None):
         secret = secrets.SecretLoader()
-        secret.register(loader)
+        if priority:
+            secret.register(loader, priority)
+        else:
+            secret.register(loader)
         return secret
 
     if args.custom_loader:
-        loader = get_custom_loader(args.custom_loader)
-        return clean_loader(loader)
+        loader = get_custom_loader(args.custom_loader_path)
+        return clean_loader(loader, args.custom_loader_priority)
     elif args.loader:
         loader = available_loaders[args.loader]
         return clean_loader(loader)
@@ -87,7 +96,27 @@ def get_secret_loader(args):
         return secrets.secret
 
 
+def parse_custom_loader(args):
+    if not args.custom_loader:
+        return args
+
+    if 2 < len(args.custom_loader):
+        # This might be changed later on, if needed
+        parser.error("Only one loader priority pair is accepted")
+
+    args.custom_loader_path = str(args.custom_loader[0])
+    try:
+        args.custom_loader_priority = float(args.custom_loader[1])
+    except IndexError:
+        args.custom_loader_priority = None
+    except ValueError:
+        parser.error("Expected float for priority --custom_loader CUSTOM_LOADER [PRIORITY]")
+
+    return args
+
+
 def parse_args(args):
+    args = parse_custom_loader(args)
     args.secret = get_secret_loader(args)
 
     if args.list_loaders:

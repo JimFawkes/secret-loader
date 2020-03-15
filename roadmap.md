@@ -19,7 +19,8 @@ Completed March 13th 2020
 ## v0.2
 **GOAL:** _Add CLI to load secrets_
  - [x] Allow secrets to be retrieved for all or a specific Loader
- - [ ] Add option to add custom loader with specific priority
+ - [x] Add option to add custom loader with specific priority
+ - [ ] Add custom loader without removing pre-registered loaders
  - [x] Add option to list all registered loaders with their priority
  - [x] Find a way to easily inlcude Custom 3rd Party Loaders
  - [x] Add proper Help message

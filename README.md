@@ -16,7 +16,7 @@ python3.8+
 ```pytest
 python -m secrets_loader --help
 
-usage: secret_loader [-h] [--name NAME] [--fail] [--loader {EnvLoader,EnvFileLoader,AWSSecretsLoader}] [--custom_loader CUSTOM_LOADER] [--list_loaders]
+usage: secret_loader [-h] [--name NAME] [--fail] [--loader {EnvLoader,EnvFileLoader,AWSSecretsLoader}] [--custom_loader CUSTOM_LOADER [PRIORITY ...]] [--list_loaders]
 
 Secret-Loader
 
@@ -35,7 +35,7 @@ optional arguments:
   --fail                Fail if Secret is not Found
   --loader {EnvLoader,EnvFileLoader,AWSSecretsLoader}
                         Specify a Loader to use
-  --custom_loader CUSTOM_LOADER
+  --custom_loader CUSTOM_LOADER [PRIORITY ...]
                         Use custom Loader, specified as an importable string e.g., 'some.module.CustomLoader'
   --list_loaders, -l    List all currently available loaders
 
