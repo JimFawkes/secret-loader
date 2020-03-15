@@ -20,12 +20,14 @@ Completed March 13th 2020
 **GOAL:** _Add CLI to load secrets_
  - [x] Allow secrets to be retrieved for all or a specific Loader
  - [x] Add option to add custom loader with specific priority
- - [ ] Add custom loader without removing pre-registered loaders
+ - [x] Add custom loader without removing pre-registered loaders
  - [x] Add option to list all registered loaders with their priority
  - [x] Find a way to easily inlcude Custom 3rd Party Loaders
  - [x] Add proper Help message
 
-_Completed Date and version tag link_
+Completed March 15th 2020
+
+:bookmark: Tag: [v0.2](https://github.com/JimFawkes/secret-loader/releases/tag/v0.2)
 
 --------
 

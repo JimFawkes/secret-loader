@@ -22,6 +22,8 @@ import sys
 
 from secret_loader import secrets
 
+DEFAULT_PRIORITY = 100
+
 # This is depneding on all available default loaders. Might need a refactor if
 # not all possible loaders are registered by default.
 available_loaders = {
@@ -41,9 +43,7 @@ parser.add_argument(
 
 parser.add_argument("--fail", help="Fail if Secret is not Found", action="store_true")
 
-parser.add_argument(
-    "--loader", help="Specify a Loader to use", choices=available_loaders.keys(),
-)
+parser.add_argument("--loader", help="Specify a Loader to use", choices=available_loaders.keys())
 
 # Currently this appears in the help message as one or more possible args. However
 # Only one or two values are valid when this arg is passed.
@@ -53,8 +53,18 @@ parser.add_argument(
     "--custom_loader",
     help="Use custom Loader, specified as an importable string e.g., 'some.module.CustomLoader'",
     type=str,
-    nargs="+",
-    metavar=("CUSTOM_LOADER", "PRIORITY"),
+)
+
+parser.add_argument(
+    "--priority",
+    "-p",
+    help="Specify a specific priority level for a selected or custom loader",
+    type=float,
+    default=DEFAULT_PRIORITY,
+)
+
+parser.add_argument(
+    "--remove_loaders", help="Remove pre-registered Loaders", action="store_true",
 )
 
 parser.add_argument(
@@ -62,6 +72,11 @@ parser.add_argument(
 )
 
 
+# Bug: This will import the specified module and run the code within. This can lead
+# to unexpected behavoir if unintended. Currently it is unclear how to avoid this.
+# A potential feature could be that this allows the configuration of the cli via
+# python code. However sideeffects need to be investigated first before actively
+# supporting this (turning the bug into a feature).
 def get_custom_loader(loader_path):
     module_path, loader_name = loader_path.rsplit(".", 1)
     custom_module = importlib.import_module(module_path)
@@ -78,45 +93,35 @@ def list_loaders(args):
 
 
 def get_secret_loader(args):
-    def clean_loader(loader, priority=None):
+    if args.remove_loaders:
         secret = secrets.SecretLoader()
-        if priority:
-            secret.register(loader, priority)
-        else:
-            secret.register(loader)
-        return secret
+    else:
+        secret = secrets.secret
 
+    # It would be possible to allow both custom_loader and loader args to be added.
+    # However this creates an issue with the priority flag as it is implemented now.
+    # Additionally it might not be interesting in the long run, as custom_loader and
+    # loader functionallity might be merged into one flag.
     if args.custom_loader:
-        loader = get_custom_loader(args.custom_loader_path)
-        return clean_loader(loader, args.custom_loader_priority)
+        loader = get_custom_loader(args.custom_loader)
+        secret.register(loader, args.priority)
+
     elif args.loader:
         loader = available_loaders[args.loader]
-        return clean_loader(loader)
-    else:
-        return secrets.secret
+        secret.register(loader, args.priority)
+
+    return secret
 
 
-def parse_custom_loader(args):
-    if not args.custom_loader:
-        return args
-
-    if 2 < len(args.custom_loader):
-        # This might be changed later on, if needed
-        parser.error("Only one loader priority pair is accepted")
-
-    args.custom_loader_path = str(args.custom_loader[0])
-    try:
-        args.custom_loader_priority = float(args.custom_loader[1])
-    except IndexError:
-        args.custom_loader_priority = None
-    except ValueError:
-        parser.error("Expected float for priority --custom_loader CUSTOM_LOADER [PRIORITY]")
-
-    return args
-
-
+# TODO: Add warning if priority is specified but no custom loader
 def parse_args(args):
-    args = parse_custom_loader(args)
+    if args.loader and args.custom_loader:
+        parser.error("Specifying both '--loader' and '--custom_loader' is not supported.")
+    if args.remove_loaders and not (args.loader or args.custom_loader):
+        parser.error(
+            "--remove_loaders can only be specified if '--loader' or '--custom_loader' are specified"
+        )
+
     args.secret = get_secret_loader(args)
 
     if args.list_loaders:

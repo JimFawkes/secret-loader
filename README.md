@@ -7,16 +7,12 @@ Flexible Secret Loader
 ![python](https://img.shields.io/badge/python-v3.8%2B-blue)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-# Requirements
-```
-python3.8+
-```
 
 ## How to run the secrets_loader from the Command Line
 ```pytest
 python -m secrets_loader --help
 
-usage: secret_loader [-h] [--name NAME] [--fail] [--loader {EnvLoader,EnvFileLoader,AWSSecretsLoader}] [--custom_loader CUSTOM_LOADER [PRIORITY ...]] [--list_loaders]
+usage: secret_loader [-h] [--name NAME] [--fail] [--loader {EnvLoader,EnvFileLoader,AWSSecretsLoader}] [--custom_loader CUSTOM_LOADER] [--priority PRIORITY] [--remove_loaders] [--list_loaders]
 
 Secret-Loader
 
@@ -35,8 +31,11 @@ optional arguments:
   --fail                Fail if Secret is not Found
   --loader {EnvLoader,EnvFileLoader,AWSSecretsLoader}
                         Specify a Loader to use
-  --custom_loader CUSTOM_LOADER [PRIORITY ...]
+  --custom_loader CUSTOM_LOADER
                         Use custom Loader, specified as an importable string e.g., 'some.module.CustomLoader'
+  --priority PRIORITY, -p PRIORITY
+                        Specify a specific priority level for a selected or custom loader
+  --remove_loaders      Remove pre-registered Loaders
   --list_loaders, -l    List all currently available loaders
 
 Version v0.1 - March 2020 - Jim Fawkes - src: github.com/JimFawkes/secret-loader

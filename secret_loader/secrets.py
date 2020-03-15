@@ -157,6 +157,8 @@ LoaderContainer = namedtuple(
 
 # TODO: Think about renaming this class
 class SecretLoader(BaseClass):
+    DEFAULT_LOADER_PRIORITY = 0
+
     def __init__(self, loaders=[], *, parser=lambda x: x):
         self._loaders = self._construct_loader_list(loaders)
         self._parser = parser
@@ -176,7 +178,8 @@ class SecretLoader(BaseClass):
         raise SecretNotFoundError(f"Could not load '{secret_name}' using loaders: {self.loaders}")
 
     @staticmethod
-    def _construct_loader(loader, priority=0, *args, **kwargs):
+    def _construct_loader(loader, priority=None, *args, **kwargs):
+        priority = priority or SecretLoader.DEFAULT_LOADER_PRIORITY
         return LoaderContainer(
             loader=loader(*args, **kwargs),
             priority=priority,
