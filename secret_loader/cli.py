@@ -117,6 +117,7 @@ def get_secret_loader(args):
 def parse_args(args):
     if args.loader and args.custom_loader:
         parser.error("Specifying both '--loader' and '--custom_loader' is not supported.")
+
     if args.remove_loaders and not (args.loader or args.custom_loader):
         parser.error(
             "--remove_loaders can only be specified if '--loader' or '--custom_loader' are specified"

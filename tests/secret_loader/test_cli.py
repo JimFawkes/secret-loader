@@ -182,7 +182,9 @@ def test_argument_parser_takes_remove_loader_for_specified_loader(
     assert args.loader == valid_loader_class
 
 
-def test_argument_parser_fails_if_both_custom_loader_and_loader_are_specified(get_parse_args,):
+def test_argument_parser_fails_if_both_custom_loader_and_loader_are_specified(
+    get_parse_args, valid_loader_class
+):
 
     with pytest.raises(SystemExit) as e:
         args = get_parse_args(
@@ -190,7 +192,7 @@ def test_argument_parser_fails_if_both_custom_loader_and_loader_are_specified(ge
                 "--name",
                 "some_name",
                 "--loader",
-                "some_loader",
+                valid_loader_class,
                 "--custom_loader",
                 "some_custom_loader",
             ]
