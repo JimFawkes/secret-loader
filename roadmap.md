@@ -31,16 +31,16 @@ Completed March 15th 2020
 
 --------
 
+
 ## v0.3
 **GOAL:** _Add documentation & Logs_
  - [ ] Add proper documentation in SKLearn Style to all Code
- - [ ] Add Installation Guide to Readme
  - [ ] Add How-To for module
  - [ ] Add How-To for CLI
  - [ ] Add examples
- - [ ] Add gifs to How-To
  - [ ] Add proper Log-Config for CLI
  - [ ] Add Log Config for library
+ - [x] Refactor project to make it compatible for min 3.7+ (currently 3.8+)
 
 _Completed Date and version tag link_
 
@@ -50,14 +50,12 @@ _Completed Date and version tag link_
 **GOAL:** _Refactor Tests & Add tox_
  - [ ] Remove all unnecessary tests
  - [ ] Structure the Test Files better
- - [ ] Refactor project to make it compatible for min 3.7+ (currently 3.8+)
- - [ ] Use tox to test for all supported python versions
 
 _Completed Date and version tag link_
 
 --------
 
-## v1.0
+## v0.5
 **GOAL:** _Package and Publish Project_
  - [ ] Package the Project
  - [ ] Add a Logo for the Project
@@ -66,6 +64,16 @@ _Completed Date and version tag link_
 
 --------
 
+## v0.6
+**GOAL:** _Add documentation & Logs_
+ - [ ] Add Installation Guide to Readme
+ - [ ] Add gifs to How-To
+
+_Completed Date and version tag link_
+
+--------
+
 # Backlog Potential Enhancements
  - [ ] Allow Users to configure cli via config file (add multiple custom loaders, change priority)
  - [ ] Enable some results parser options for CLI
+ - [ ] Add Google Cloud/Azure Loaders
