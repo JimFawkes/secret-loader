@@ -1,4 +1,7 @@
 """
+Copyright: (c) 2020, Moritz Eilfort
+GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
     Think about caching the results to reduce the roudtrips to aws
 
     TODO:
@@ -7,8 +10,6 @@
             * Add log when constructing InputLoader about the special case
         - Add Input Loader
             * Call loaders by name?
-
-
 """
 import base64
 import dotenv
