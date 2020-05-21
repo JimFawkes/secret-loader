@@ -221,7 +221,10 @@ class SecretLoader(BaseClass):
         # NOTE: For loaders with the same priority, there is no guaranteed order
         return sorted(self._loaders, key=lambda x: x.priority, reverse=True)
 
-    def parse(self, value, /, *, parser=None):
+    # Removed positional only argument to be compatible for python < 3.8
+    # Consider making value  positional only in the future
+    def parse(self, value, *, parser=None):
+
         if parser is None:
             return self._parser(value)
         else:
