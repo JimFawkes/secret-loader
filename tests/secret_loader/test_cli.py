@@ -2,210 +2,20 @@ import importlib
 import pytest
 from unittest.mock import patch
 
-from secret_loader import cli, secrets
+from secret_loader import cli
 
+from . import helpers
+from .helpers import get_parse_args, valid_loader, valid_loader_class
 
-class MockArgs:
-    def __init__(
-        self,
-        name="",
-        fail=False,
-        loader=None,
-        custom_loader=None,
-        list_loaders=False,
-        secret=None,
-        priority=cli.DEFAULT_PRIORITY,
-        remove_loaders=False,
-        **kwargs,
-    ):
-        self.name = name
-        self.fail = fail
-        self.loader = loader
-        self.custom_loader = custom_loader
-        self.list_loaders = list_loaders
-        self.secret = secret
-        self.priority = float(priority)
-        self.remove_loaders = remove_loaders
-
-
-@pytest.fixture
-def get_parse_args(monkeypatch):
-
-    monkeypatch.setattr(cli, "get_secret_loader", lambda x: lambda x: x)
-    monkeypatch.setattr(cli, "list_loaders", lambda x: None)
-
-    def parse_args(args=[]):
-        return cli.parse_args(cli.parser.parse_args(args))
-
-    return parse_args
-
-
-@pytest.fixture
-def valid_loader_class():
-    return list(cli.available_loaders)[0]
-
-
-@pytest.fixture
-def valid_loader(valid_loader_class):
-    return cli.available_loaders[valid_loader_class]
-
-
-def test_argument_parser_exits_for_missing_required_args(get_parse_args):
-    with pytest.raises(SystemExit) as e:
-        args = get_parse_args()
-
-    assert e.value.code != 0
-
-
-def test_argument_parser_takes_a_secret_name(get_parse_args):
-    secret_name = "SOME_NAME"
-    args = get_parse_args(["--name", f"{secret_name}"])
-
-    assert args.name == secret_name
-
-
-def test_argument_parser_sets_arg_fail_as_false_by_default(get_parse_args):
-    secret_name = "SOME_NAME"
-    args = get_parse_args(["--name", f"{secret_name}"])
-
-    assert args.fail is False
-
-
-def test_argument_parser_sets_arg_fail_as_true_when_provided(get_parse_args):
-    secret_name = "SOME_NAME"
-    args = get_parse_args(["--name", f"{secret_name}", "--fail"])
-
-    assert args.fail is True
-
-
-def test_argument_parser_sets_arg_loader_as_none_by_default(get_parse_args):
-    secret_name = "SOME_NAME"
-    args = get_parse_args(["--name", f"{secret_name}"])
-
-    assert args.loader is None
-
-
-def test_argument_parser_exits_for_unknown_loader(get_parse_args):
-    secret_name = "SOME_NAME"
-    unknown_loader = "no_real_loader"
-
-    with pytest.raises(SystemExit) as e:
-        get_parse_args(["--name", secret_name, "--loader", unknown_loader])
-
-    assert e.value.code != 0
-
-
-def test_argument_parser_accepts_valid_loader(get_parse_args, valid_loader_class):
-    secret_name = "SOME_NAME"
-
-    args = get_parse_args(["--name", secret_name, "--loader", valid_loader_class])
-
-    assert args.loader == valid_loader_class
-
-
-def test_argument_parser_takes_a_custom_loader(get_parse_args):
-    secret_name = "SOME_NAME"
-    custom_loader = "some_module.CustomLoader"
-    args = get_parse_args(["--name", secret_name, "--custom_loader", custom_loader])
-
-    assert args.custom_loader == custom_loader
-
-
-def test_argument_parser_takes_a_custom_loader_and_priority(get_parse_args):
-    secret_name = "SOME_NAME"
-    custom_loader = "some_module.CustomLoader"
-    priority = 10
-    args = get_parse_args(
-        ["--name", secret_name, "--custom_loader", custom_loader, "--priority", str(priority)]
-    )
-
-    assert args.custom_loader == custom_loader
-    assert args.priority == float(priority)
-
-
-def test_argument_parser_fails_for_wrong_priority_format(get_parse_args):
-    secret_name = "SOME_NAME"
-    custom_loader = "some_module.CustomLoader"
-    priority = "broken_priority"
-
-    with pytest.raises(SystemExit) as e:
-        args = get_parse_args(
-            ["--name", secret_name, "--custom_loader", custom_loader, "--priority", priority]
-        )
-
-    assert e.value.code != 0
-
-
-def test_argument_parser_exits_with_code_zero_when_missing_name_arg_but_list_loader_arg_given(
-    get_parse_args,
-):
-    with pytest.raises(SystemExit) as e:
-        args = get_parse_args(["--list_loaders"])
-
-    assert 0 == e.value.code
-
-
-def test_argument_parser_exits_with_code_zero_when_list_loader_arg_given(get_parse_args,):
-    with pytest.raises(SystemExit) as e:
-        args = get_parse_args(["--name", "some_name", "--list_loaders"])
-
-    assert 0 == e.value.code
-
-
-def test_argument_parser_fails_for_remove_loader_arg_without_new_specified_loader(get_parse_args,):
-    with pytest.raises(SystemExit) as e:
-        args = get_parse_args(["--name", "some_name", "--remove_loaders"])
-
-    assert 0 != e.value.code
-
-
-def test_argument_parser_takes_remove_loader_for_specified_custom_loader(get_parse_args,):
-    custom_loader = "some_module.CustomLoader"
-
-    args = get_parse_args(
-        ["--name", "some_name", "--custom_loader", custom_loader, "--remove_loaders"]
-    )
-
-    assert args.remove_loaders
-    assert args.custom_loader == custom_loader
-
-
-def test_argument_parser_takes_remove_loader_for_specified_loader(
-    get_parse_args, valid_loader_class
-):
-
-    args = get_parse_args(
-        ["--name", "some_name", "--loader", valid_loader_class, "--remove_loaders"]
-    )
-
-    assert args.remove_loaders
-    assert args.loader == valid_loader_class
-
-
-def test_argument_parser_fails_if_both_custom_loader_and_loader_are_specified(
-    get_parse_args, valid_loader_class
-):
-
-    with pytest.raises(SystemExit) as e:
-        args = get_parse_args(
-            [
-                "--name",
-                "some_name",
-                "--loader",
-                valid_loader_class,
-                "--custom_loader",
-                "some_custom_loader",
-            ]
-        )
-
-    assert e.value.code != 0
+from secret_loader.exceptions import SecretNotFoundError
+from secret_loader.secrets import LoaderContainer, SecretLoader
 
 
 def test_secret_loader_cli(capsys):
     secret_name = "secret_name"
     secret_value = "secret_value"
 
-    args = MockArgs(secret_name, secret=lambda x: secret_value)
+    args = helpers.MockArgs(secret_name, secret=lambda x: secret_value)
     cli.secret_loader_cli(args)
 
     captured = capsys.readouterr()
@@ -218,9 +28,9 @@ def test_secret_loader_cli_fail_silently(capsys):
     secret_name = "secret_name"
 
     def raise_on_call(val):
-        raise secrets.SecretNotFoundError()
+        raise SecretNotFoundError()
 
-    args = MockArgs(secret_name, secret=raise_on_call)
+    args = helpers.MockArgs(secret_name, secret=raise_on_call)
 
     cli.secret_loader_cli(args)
 
@@ -234,11 +44,11 @@ def test_secret_loader_cli_fail():
     secret_name = "secret_name"
 
     def raise_on_call(val):
-        raise secrets.SecretNotFoundError()
+        raise SecretNotFoundError()
 
-    args = MockArgs(secret_name, fail=True, secret=raise_on_call)
+    args = helpers.MockArgs(secret_name, fail=True, secret=raise_on_call)
 
-    with pytest.raises(secrets.SecretNotFoundError):
+    with pytest.raises(SecretNotFoundError):
         cli.secret_loader_cli(args)
 
 
@@ -256,9 +66,9 @@ def test_available_loader_count():
 
 
 def test_get_secret_loader_for_specific_loader(valid_loader, valid_loader_class):
-    args = MockArgs("some_name", loader=valid_loader_class)
+    args = helpers.MockArgs("some_name", loader=valid_loader_class)
 
-    with patch.object(secrets.SecretLoader, "register", return_value=None) as mock_register:
+    with patch.object(SecretLoader, "register", return_value=None) as mock_register:
         secret = cli.get_secret_loader(args)
 
     assert mock_register.called
@@ -266,12 +76,12 @@ def test_get_secret_loader_for_specific_loader(valid_loader, valid_loader_class)
 
 
 def test_get_secret_loader_without_specifying_loader():
-    args = MockArgs("some_name")
-    with patch.object(secrets.SecretLoader, "register", return_value=None) as mock_register:
+    args = helpers.MockArgs("some_name")
+    with patch.object(SecretLoader, "register", return_value=None) as mock_register:
         secret = cli.get_secret_loader(args)
 
     assert not mock_register.called
-    assert secret is secrets.secret
+    assert secret is secret
 
 
 @patch("secret_loader.cli.get_custom_loader")
@@ -280,8 +90,8 @@ def test_get_secret_loader_for_custom_loader_without_priority(mock_get_custom_lo
     custom_loader_path = f"some.module.{custom_loader}"
     mock_get_custom_loader.return_value = custom_loader
 
-    args = MockArgs("some_name", custom_loader=custom_loader_path)
-    with patch.object(secrets.SecretLoader, "register", return_value=None) as mock_register:
+    args = helpers.MockArgs("some_name", custom_loader=custom_loader_path)
+    with patch.object(SecretLoader, "register", return_value=None) as mock_register:
         secret = cli.get_secret_loader(args)
 
     assert mock_register.called
@@ -298,8 +108,10 @@ def test_get_secret_loader_for_custom_loader_with_priority(mock_get_custom_loade
     priority = "1000"
     mock_get_custom_loader.return_value = custom_loader
 
-    args = MockArgs("some_name", custom_loader=custom_loader_path, priority=float(priority),)
-    with patch.object(secrets.SecretLoader, "register", return_value=None) as mock_register:
+    args = helpers.MockArgs(
+        "some_name", custom_loader=custom_loader_path, priority=float(priority),
+    )
+    with patch.object(SecretLoader, "register", return_value=None) as mock_register:
         secret = cli.get_secret_loader(args)
 
     assert mock_register.called
@@ -336,7 +148,7 @@ def test_list_loaders(capsys):
     class MockLoader:
         pass
 
-    loader = secrets.LoaderContainer(
+    loader = LoaderContainer(
         loader=MockLoader(), priority=999, loader_class=MockLoader, args=[], kwargs={}
     )
 
@@ -344,7 +156,7 @@ def test_list_loaders(capsys):
         def __init__(self, name=""):
             self.loaders = [loader]
 
-    args = MockArgs(secret=MockSecret())
+    args = helpers.MockArgs(secret=MockSecret())
     cli.list_loaders(args)
     captured = capsys.readouterr()
 
@@ -353,7 +165,7 @@ def test_list_loaders(capsys):
 
 
 def test_loader_count_for_custom_loader(monkeypatch, valid_loader):
-    args = MockArgs(custom_loader=valid_loader)
+    args = helpers.MockArgs(custom_loader=valid_loader)
 
     monkeypatch.setattr(cli, "get_custom_loader", lambda x: valid_loader)
 
@@ -363,7 +175,7 @@ def test_loader_count_for_custom_loader(monkeypatch, valid_loader):
 
 
 def test_loader_count_for_custom_loader_with_remove_loaders_arg(monkeypatch, valid_loader):
-    args = MockArgs(custom_loader=valid_loader, remove_loaders=True)
+    args = helpers.MockArgs(custom_loader=valid_loader, remove_loaders=True)
 
     monkeypatch.setattr(cli, "get_custom_loader", lambda x: valid_loader)
 
@@ -373,8 +185,8 @@ def test_loader_count_for_custom_loader_with_remove_loaders_arg(monkeypatch, val
     assert secret.loaders[0].loader_class == valid_loader
 
 
-def test_loader_count_for_loader_with_remove_loaders_arg(monkeypatch, valid_loader_class):
-    args = MockArgs(loader=valid_loader_class, remove_loaders=True)
+def test_loader_count_for_loader_with_remove_loaders_arg(valid_loader_class):
+    args = helpers.MockArgs(loader=valid_loader_class, remove_loaders=True)
 
     secret = cli.get_secret_loader(args)
 
