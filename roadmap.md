@@ -49,7 +49,7 @@ _Completed Date and version tag link_
 ## v0.4
 **GOAL:** _Refactor Tests & Add tox_
  - [ ] Remove all unnecessary tests
- - [ ] Structure the Test Files better
+ - [x] Structure the Test Files better
 
 _Completed Date and version tag link_
 
