@@ -31,40 +31,48 @@ Completed March 15th 2020
 
 --------
 
-
 ## v0.3
-**GOAL:** _Add documentation & Logs_
- - [ ] Add proper documentation in SKLearn Style to all Code
- - [ ] Add How-To for module
- - [ ] Add How-To for CLI
- - [ ] Add examples
+**GOAL:** _Refactor Structure_
  - [ ] Add proper Log-Config for CLI
  - [ ] Add Log Config for library
+ - [ ] Package the Project
  - [x] Refactor project to make it compatible for min 3.7+ (currently 3.8+)
-
-_Completed Date and version tag link_
-
---------
-
-## v0.4
-**GOAL:** _Refactor Tests & Add tox_
- - [ ] Remove all unnecessary tests
+ - [x] Refactor project structure
  - [x] Structure the Test Files better
 
 _Completed Date and version tag link_
 
 --------
 
+## v0.4
+**GOAL:** _Add documentation & Logs_
+ - [ ] Add proper documentation in SKLearn Style to all Code
+ - [ ] Add How-To for module
+ - [ ] Add How-To for CLI
+ - [ ] Add examples
+
+_Completed Date and version tag link_
+
+--------
+
 ## v0.5
-**GOAL:** _Package and Publish Project_
- - [ ] Package the Project
- - [ ] Add a Logo for the Project
+**GOAL:** _Refactor Tests & Add tox_
+ - [ ] Remove all unnecessary tests
 
 _Completed Date and version tag link_
 
 --------
 
 ## v0.6
+**GOAL:** _Package and Publish Project_
+ - [ ] Add a Logo for the Project
+ - [ ] Publish Package
+
+_Completed Date and version tag link_
+
+--------
+
+## v0.7
 **GOAL:** _Add documentation & Logs_
  - [ ] Add Installation Guide to Readme
  - [ ] Add gifs to How-To
