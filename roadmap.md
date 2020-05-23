@@ -35,7 +35,7 @@ Completed March 15th 2020
 **GOAL:** _Refactor Structure_
  - [x] Add proper Log-Config for CLI
  - [x] Add Log Config for library
- - [ ] Package the Project
+ - [x] Package the Project
  - [x] Refactor project to make it compatible for min 3.7+ (currently 3.8+)
  - [x] Refactor project structure
  - [x] Structure the Test Files better
