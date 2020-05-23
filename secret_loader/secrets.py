@@ -11,21 +11,19 @@ GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gp
         - Add Input Loader
             * Call loaders by name?
 """
-import warnings
 
-from collections.abc import Mapping
 from collections import namedtuple
-from pathlib import Path
+import logging
 
-from .base import BaseClass, BaseLoader
+from .base import BaseClass, pretty_print_function
 from .exceptions import (
     SecretNotFoundError,
     NoLoaderConfiguredError,
     ConstructLoaderError,
-    SecretMutabilityError,
 )
 from .loaders import EnvLoader, EnvFileLoader, AWSSecretsLoader
 
+logger = logging.getLogger("secret_loader.secrets")
 
 LoaderContainer = namedtuple(
     "LoaderContainer", ("loader", "priority", "loader_class", "args", "kwargs")
@@ -38,6 +36,7 @@ class SecretLoader(BaseClass):
     def __init__(self, loaders=[], *, parser=lambda x: x):
         self._loaders = self._construct_loader_list(loaders)
         self._parser = parser
+        logger.debug(f"Initialized: {self}")
 
     def __call__(self, secret_name, *, parser=None, **kwargs):
         if not self.loaders:
@@ -46,7 +45,9 @@ class SecretLoader(BaseClass):
             )
         for loader in self.loaders:
             try:
+                logger.debug(f"Trying to load {secret_name} using {loader.loader_class}")
                 secret = loader.loader.load(secret_name, **kwargs)
+                logger.debug(f"Succsessfully loaded {secret_name} using {loader.loader_class}")
                 return self.parse(secret, parser=parser)
             except SecretNotFoundError as e:
                 continue
@@ -101,13 +102,22 @@ class SecretLoader(BaseClass):
     def parse(self, value, *, parser=None):
 
         if parser is None:
+            logger.debug(
+                f"Parsing secret using parser={pretty_print_function(self._parser)} (Hint: Default Parser or Class Level Parser)"
+            )
             return self._parser(value)
         else:
+            logger.debug(
+                f"Parsing secret using parser={pretty_print_function(parser)} (Hint: Parser explicitly passed)"
+            )
             return parser(value)
 
     def register(self, loader, priority=0, *args, **kwargs):
         constructed_loader = self._construct_loader(loader, priority, *args, **kwargs)
         self._loaders.append(constructed_loader)
+        logger.debug(
+            f"Registered Loader: '{constructed_loader.loader_class}' with priority={constructed_loader.priority}"
+        )
 
 
 # Set default priorities in a somewhat sensible way.

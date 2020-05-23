@@ -89,6 +89,7 @@ def get_custom_loader(loader_path):
     module_path, loader_name = loader_path.rsplit(".", 1)
     custom_module = importlib.import_module(module_path)
     loader = getattr(custom_module, loader_name)
+    logger.debug(f"Found {loader} in {loader_path}")
     return loader
 
 
@@ -175,6 +176,7 @@ def secret_loader_cli(args):
         if args.fail:
             raise e
         else:
+            logger.debug(f"No secret found with name='{args.name}'")
             pass
 
 

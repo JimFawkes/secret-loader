@@ -6,14 +6,17 @@ This module contains the Loader clases for secret_loader
 """
 import base64
 import getpass
+import logging
 import os
 
 import boto3.session
 from botocore.exceptions import ClientError
 import dotenv
 
-from .base import BaseLoader
+from .base import BaseLoader, pretty_print_function
 from .exceptions import SecretNotFoundError
+
+logger = logging.getLogger("secret_loader.loaders")
 
 
 class EnvLoader(BaseLoader):
@@ -21,6 +24,7 @@ class EnvLoader(BaseLoader):
         self.getenv = getenv
 
     def load(self, secret_name, **kwargs):
+        logger.debug(f"Using {pretty_print_function(self.getenv)} to load environment variables")
         value = self.getenv(secret_name)
         if value is None:
             raise SecretNotFoundError(f"EnvLoader could not load {secret_name}")
@@ -44,6 +48,8 @@ class EnvFileLoader(EnvLoader):
         super().__init__(os.getenv, *args, **kwargs)
 
     def load(self, secret_name, **kwargs):
+        logger.debug(f"Using {pretty_print_function(self.load_env_file)} to load secrets from file")
+        logger.debug(f"Trying to load secret from {self.file_path}")
         self.load_env_file(self.file_path)
         return super().load(secret_name)
 
@@ -109,6 +115,7 @@ class InputLoader(BaseLoader):
 
     def load(self, secret_name, prompt_input=False, **kwargs):
         if prompt_input:
+            logger.debug(f"Using {pretty_print_function(self._input)} to prompt the user for input")
             return self._input(f"Enter Value for {secret_name}: ")
         else:
             raise SecretNotFoundError(
