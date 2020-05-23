@@ -5,10 +5,25 @@ GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gp
 This module contains the base clases for secret_loader
 """
 
+import inspect
+
+
+def pretty_print_function(function):
+    if inspect.isfunction(function):
+        return f"<function '{function.__module__}.{function.__name__}'>"
+    else:
+        return function
+
 
 class BaseClass:
     def __repr__(self):
-        attributes = ", ".join([f"{key}={value}" for key, value in vars(self).items()])
+        attribute_list = []
+        for key, value in vars(self).items():
+            value = pretty_print_function(value)
+            attribute = f"{key}={value}"
+            attribute_list.append(attribute)
+
+        attributes = ", ".join(attribute_list)
         return f"{self.__class__.__name__}({attributes})"
 
 
