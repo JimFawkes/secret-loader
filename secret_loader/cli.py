@@ -20,18 +20,20 @@ Version v0.1 - March 2020 - Jim Fawkes - src: github.com/JimFawkes/secret-loader
 """
 
 import argparse
+import logging
 import importlib
 import sys
 
-from secret_loader import secrets
+from secret_loader.secrets import secret, SecretLoader
+from secret_loader.exceptions import SecretNotFoundError
+
+logger = logging.getLogger("secret_loader.cli")
 
 DEFAULT_PRIORITY = 100
 
 # This is depneding on all available default loaders. Might need a refactor if
 # not all possible loaders are registered by default.
-available_loaders = {
-    loader.loader_class.__name__: loader.loader_class for loader in secrets.secret.loaders
-}
+available_loaders = {loader.loader_class.__name__: loader.loader_class for loader in secret.loaders}
 
 parser = argparse.ArgumentParser(
     prog="secret_loader",
@@ -75,6 +77,9 @@ parser.add_argument(
 )
 
 
+parser.add_argument("--debug", "-d", help="Print Debug Messages", action="store_true")
+
+
 # Bug: This will import the specified module and run the code within. This can lead
 # to unexpected behavoir if unintended. Currently it is unclear how to avoid this.
 # A potential feature could be that this allows the configuration of the cli via
@@ -97,9 +102,11 @@ def list_loaders(args):
 
 def get_secret_loader(args):
     if args.remove_loaders:
-        secret = secrets.SecretLoader()
+        logger.debug(f"Get new secret_loader without any registered loader")
+        secret_ = SecretLoader()
     else:
-        secret = secrets.secret
+        logger.debug(f"Use default secret_loader with loaders pre-registered")
+        secret_ = secret
 
     # It would be possible to allow both custom_loader and loader args to be added.
     # However this creates an issue with the priority flag as it is implemented now.
@@ -107,17 +114,40 @@ def get_secret_loader(args):
     # loader functionallity might be merged into one flag.
     if args.custom_loader:
         loader = get_custom_loader(args.custom_loader)
-        secret.register(loader, args.priority)
+        secret_.register(loader, args.priority)
 
     elif args.loader:
         loader = available_loaders[args.loader]
-        secret.register(loader, args.priority)
+        secret_.register(loader, args.priority)
 
-    return secret
+    return secret_
+
+
+def setup_logging():
+    # Default Logger
+    logger = logging.getLogger()
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter("%(asctime)s %(name)s - %(levelname)s - %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+
+    # Quiet down boto3 botocore and urllib
+    urllib_logger = logging.getLogger("urllib3")
+    urllib_logger.setLevel(logging.INFO)
+
+    botocore_logger = logging.getLogger("botocore")
+    botocore_logger.setLevel(logging.INFO)
+
+    boto3_logger = logging.getLogger("boto3")
+    boto3_logger.setLevel(logging.INFO)
 
 
 # TODO: Add warning if priority is specified but no custom loader
 def parse_args(args):
+    if args.debug:
+        setup_logging()
+
     if args.loader and args.custom_loader:
         parser.error("Specifying both '--loader' and '--custom_loader' is not supported.")
 
@@ -141,7 +171,7 @@ def parse_args(args):
 def secret_loader_cli(args):
     try:
         print(args.secret(args.name))
-    except secrets.SecretNotFoundError as e:
+    except SecretNotFoundError as e:
         if args.fail:
             raise e
         else:
