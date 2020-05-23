@@ -40,7 +40,9 @@ Completed March 15th 2020
  - [x] Refactor project structure
  - [x] Structure the Test Files better
 
-_Completed Date and version tag link_
+Completed May 23rd 2020
+
+:bookmark: Tag: [v0.3](https://github.com/JimFawkes/secret-loader/releases/tag/v0.3)
 
 --------
 
