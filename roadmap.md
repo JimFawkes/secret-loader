@@ -33,8 +33,8 @@ Completed March 15th 2020
 
 ## v0.3
 **GOAL:** _Refactor Structure_
- - [ ] Add proper Log-Config for CLI
- - [ ] Add Log Config for library
+ - [x] Add proper Log-Config for CLI
+ - [x] Add Log Config for library
  - [ ] Package the Project
  - [x] Refactor project to make it compatible for min 3.7+ (currently 3.8+)
  - [x] Refactor project structure
@@ -85,3 +85,4 @@ _Completed Date and version tag link_
  - [ ] Allow Users to configure cli via config file (add multiple custom loaders, change priority)
  - [ ] Enable some results parser options for CLI
  - [ ] Add Google Cloud/Azure Loaders
+ - [ ] Add parser selection to cli (e.g. construct db connection string from dict)
