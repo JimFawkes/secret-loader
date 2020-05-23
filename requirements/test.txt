@@ -1,5 +1,5 @@
 # Requirements to run tests (Local or CI)
 -r base.txt	
 
-pytest==5.2.2
+pytest==5.4.2
 tox==3.14.5
