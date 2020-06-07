@@ -62,10 +62,13 @@ Completed June 7th 2020
 
 ## v0.5
 **GOAL:** _Package and Publish Project_
- - [ ] Publish Package
+ - [x] Publish Package
  - [x] Update metadata
 
-_Completed Date and version tag link_
+
+Completed June 7th 2020
+
+:bookmark: Tag: [v0.5](https://github.com/JimFawkes/secret-loader/releases/tag/v0.5)
 
 --------
 

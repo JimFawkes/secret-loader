@@ -104,7 +104,7 @@ optional arguments:
   --list_loaders, -l    List all currently available loaders
   --debug, -d           Print Debug Messages
 
-Version 0.3 - June 2020 - Moritz Eilfort - src: github.com/JimFawkes/secret-loader
+Version 0.5 - June 2020 - Moritz Eilfort - src: github.com/JimFawkes/secret-loader
 License GPLv3+ - Copyright 2020 Moritz Eilfort
 ```
 
