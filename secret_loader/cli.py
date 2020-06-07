@@ -16,7 +16,7 @@ The result is printed to standard out, so besure to use this wisely.
 """
 
 epilog = """
-Version v0.1 - March 2020 - Jim Fawkes - src: github.com/JimFawkes/secret-loader
+Version v0.4 - June 2020 - Jim Fawkes - src: github.com/JimFawkes/secret-loader
 """
 
 import argparse

@@ -225,7 +225,7 @@ class SecretLoader(BaseClass):
         ----------
         loader : class
             The new loader class to be instantiated and registered.
-        priority : float, optional (default=0)
+        priority : int, optional (default=0)
             Priority of the new loader, used to determine which loader is
             probebed first.
         args, kwargs : any

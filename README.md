@@ -29,6 +29,13 @@ your application runs (e.g. connecting to a database inside a docker entrypoint
 script). This way you get the same behaviour for both your application and other
 scripts.
 
+#### Default Precedence/Priority of Loaders
+The following locations will be probed for an existing value with the name `secret_name`
+in this order:
+ 1. Environment Variables
+ 1. A `.env` file
+ 1. AWS SecretsManager (using boto3 search order to search for valid aws credentials)
+
 
 ## How to install
 ```bash
@@ -67,7 +74,7 @@ important_secret = secret("my_secret_name")
 ```
 
 ## How to run the secrets_loader from the Command Line
-```bash
+```
 python -m secrets_loader --help
 
 usage: secret_loader [-h] [--name NAME] [--fail] [--loader {EnvLoader,EnvFileLoader,AWSSecretsLoader}] [--custom_loader CUSTOM_LOADER] [--priority PRIORITY] [--remove_loaders] [--list_loaders]
@@ -96,8 +103,7 @@ optional arguments:
   --remove_loaders      Remove pre-registered Loaders
   --list_loaders, -l    List all currently available loaders
 
-Version v0.1 - March 2020 - Jim Fawkes - src: github.com/JimFawkes/secret-loader
-
+Version v0.4 - June 2020 - Jim Fawkes - src: github.com/JimFawkes/secret-loader
 ```
 
 ## Examples for CLI Usage
