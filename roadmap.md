@@ -61,22 +61,16 @@ Completed June 7th 2020
 --------
 
 ## v0.5
-**GOAL:** _Refactor Tests & Add tox_
- - [ ] Remove all unnecessary tests
-
-_Completed Date and version tag link_
-
---------
-
-## v0.6
 **GOAL:** _Package and Publish Project_
  - [ ] Publish Package
+ - [x] Update metadata
 
 _Completed Date and version tag link_
 
 --------
 
 # Backlog Potential Enhancements
+ - [ ] Review/Refactor Tests
  - [ ] Add a Logo for the Project
  - [ ] Add Installation Guide to Readme
  - [ ] Add gifs to How-To

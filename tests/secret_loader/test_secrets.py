@@ -23,14 +23,6 @@ from secret_loader.exceptions import (
 
 from . import helpers
 
-
-# TODO: Move the appropriate things to a base file
-# TODO: Refacotr tests
-# TODO: Use fixtures
-# TODO: Use parameterized fixtures to not repeat so much
-# TODO: Add docstrings
-
-
 # ----------------------------------------------------------------------------
 # Test LoaderContainer
 # ----------------------------------------------------------------------------

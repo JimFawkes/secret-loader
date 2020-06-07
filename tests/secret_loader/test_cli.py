@@ -59,7 +59,7 @@ def test_secret_loader_cli_fail():
 
 @patch("secret_loader.cli.secret_loader_cli")
 @patch("secret_loader.cli.parse_args")
-def test_cli(mock_secret_loader_cli, mock_parse_args):
+def test_cli_function(mock_secret_loader_cli, mock_parse_args):
     cli.cli(parser=lambda: None)
 
     assert mock_secret_loader_cli.called
