@@ -93,3 +93,4 @@ _Completed Date and version tag link_
  - [ ] Add parser selection to cli (e.g. construct db connection string from dict)
  - [ ] Allow to pass default values when retrieving secrets
  - [ ] Allow to fail silently when retrieving secrets
+ - [ ] Make the secret name a positional argument in the cli instead of an optional one.
