@@ -2,7 +2,14 @@
 Copyright: (c) 2020, Moritz Eilfort
 GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-This module contains the Loader clases for secret_loader
+This module contains the Loader clases for secret_loader.
+
+To write a new Loader, do the following:
+    1. Inherit from BaseLoader
+    2. Define load method:
+        - takes a secret_name and kwargs
+        - returns a value if the secret is found
+        - else raises a SecretNotFoundError
 """
 import base64
 import getpass
@@ -20,6 +27,15 @@ logger = logging.getLogger("secret_loader.loaders")
 
 
 class EnvLoader(BaseLoader):
+    """
+    Loader to load secrets from environment variables.
+
+    Parameters
+    ----------
+    getenv : callable (default=os.getenv)
+        Callable used to retrieve environment variables.
+    """
+
     def __init__(self, getenv=os.getenv, *args, **kwargs):
         self.getenv = getenv
 
@@ -32,6 +48,26 @@ class EnvLoader(BaseLoader):
 
 
 class EnvFileLoader(EnvLoader):
+    """
+    Loader to laod secrets from a .env file.
+
+    This loader inherits from the EnvLoader and essentially loads the variables
+    from the .env file as environment variables and then uses the EnvLoader
+    to load the specified variable.
+
+    Parameters
+    ----------
+    file_path : str, Path, optional
+        File path of .env file. If None is given, the find_env_file callable
+        is used to find a .env file.
+    load_env_file : callable (default=dotenv.load_dotenv)
+        This callable is used to actually load the .env file and convert the
+        content into environment variables.
+    find_env_file : callable (default=dotenv.find_dotenv)
+        This callable is used to find a .env file if no file is passed to
+        file_path.
+    """
+
     def __init__(
         self,
         file_path=None,
@@ -55,6 +91,24 @@ class EnvFileLoader(EnvLoader):
 
 
 class AWSSecretsLoader(BaseLoader):
+    """
+    Loader to load secrets from the AWS SecretsManager using boto3.
+
+    Parameters
+    ----------
+    client : boto3.client
+        The client used to access the AWS API
+
+    region_name : str (default="eu-central-1")
+        The AWS Region used to look for the secret.
+
+    Note
+    ----
+    If there is no way to leverage boto3's search mechanism to retrieve the
+    AWS Credentials (see here: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#configuring-credentials), use the `client` parameter to pass in a
+    custom client which takes the necessary credentials.
+    """
+
     def __init__(self, client=None, region_name="eu-central-1"):
         self.client = client or self.get_client("secretsmanager", region_name)
 
@@ -110,6 +164,19 @@ class AWSSecretsLoader(BaseLoader):
 
 
 class InputLoader(BaseLoader):
+    """
+    Loader to prompt the user for a secret value.
+
+    Parameters
+    ----------
+    input : callable (default=getpass.getpass)
+        Callable used to prompt the user for input.
+
+    Note
+    ----
+    There is no timeout functionallity.
+    """
+
     def __init__(self, input=getpass.getpass):
         self._input = input
 

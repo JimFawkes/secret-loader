@@ -1,7 +1,3 @@
-# Secret-Loader
-
-Flexible Secret Loader
-
 [![test-action](https://github.com/JimFawkes/utils/workflows/run-tests/badge.svg)](https://github.com/JimFawkes/secret-loader/actions)
 [![codecov](https://codecov.io/gh/JimFawkes/utils/branch/master/graph/badge.svg)](https://codecov.io/gh/JimFawkes/secret-loader)
 ![python](https://img.shields.io/badge/python-3.7%20|%203.8-blue)
@@ -9,9 +5,69 @@ Flexible Secret Loader
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](COPYING)
 [![Latest Tag](https://img.shields.io/github/v/tag/jimfawkes/secret-loader)](https://github.com/JimFawkes/secret-loader/releases)
 
+# Secret-Loader
+Flexible Secret Loader
+
+ * Unified interface for different secret backends
+ * Easy to add new backends
+ * Easily configure precendence of loaders/backends
+ * Use the same precedence in bash scripts and your application
+
+#### Why?
+The intent is to have a single interface to access secrets no matter which
+secret backend is used. Personally I faced the following setup in several projects:
+ * Production/Staging Systems on AWS with secrets stored in AWS SecretsManager
+ * Local/Dev Setup with "secrets" stored in .env file or environment variables
+
+
+This project aims to work just the same no matter which scenario you are using.
+It should first check the environment variables, then the next configured loader
+and so on until a valid secret by the given name is found and returned.
+
+Additionally there is a cli because sometimes you want to retrieve secrets before
+your application runs (e.g. connecting to a database inside a docker entrypoint
+script). This way you get the same behaviour for both your application and other
+scripts.
+
+
+## How to install
+```bash
+python -m pip install secret_loader
+```
+
+## How to use the secrets_loader
+
+#### Basic/Out-of-the-box usage
+```python
+from secrets_loader import secret
+
+api_token = secret("SOME_API_TOKEN")
+# Make some use of the token ...
+```
+
+#### Add a custom loader
+```python
+from secret_loader import secret
+from secret_loader.exceptions import SecretNotFoundError
+from secret_loader.base import BaseLoader
+
+class MyCustomLoader(BaseLoader):
+    def load(self, secret_name, **kwargs):
+        # Do something to get the secret_value
+        secret_value = "some-very-important-secret"
+
+        if not secret_value:
+            # This is necessary/expected to indicate that the secret was not found
+            raise SecretNotFoundError(f"MyCustomLoader cloud not load {secret_name}")
+
+        return secret_value
+
+secret.register(MyCustomLoader, priority=100)
+important_secret = secret("my_secret_name")
+```
 
 ## How to run the secrets_loader from the Command Line
-```pytest
+```bash
 python -m secrets_loader --help
 
 usage: secret_loader [-h] [--name NAME] [--fail] [--loader {EnvLoader,EnvFileLoader,AWSSecretsLoader}] [--custom_loader CUSTOM_LOADER] [--priority PRIORITY] [--remove_loaders] [--list_loaders]
@@ -44,7 +100,7 @@ Version v0.1 - March 2020 - Jim Fawkes - src: github.com/JimFawkes/secret-loader
 
 ```
 
-# Examples for CLI Usage
+## Examples for CLI Usage
 ![secret_loader_cli_demo](docs/img/secret_loader_cli_demo_4.png)
 
 

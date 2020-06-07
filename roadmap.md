@@ -48,10 +48,10 @@ Completed May 23rd 2020
 
 ## v0.4
 **GOAL:** _Add documentation & Logs_
- - [ ] Add proper documentation in SKLearn Style to all Code
- - [ ] Add How-To for module
- - [ ] Add How-To for CLI
- - [ ] Add examples
+ - [x] Add proper documentation in SKLearn Style to all Code
+ - [x] Add How-To for module
+ - [x] Add How-To for CLI
+ - [x] Add examples
 
 _Completed Date and version tag link_
 
@@ -88,3 +88,5 @@ _Completed Date and version tag link_
  - [ ] Enable some results parser options for CLI
  - [ ] Add Google Cloud/Azure Loaders
  - [ ] Add parser selection to cli (e.g. construct db connection string from dict)
+ - [ ] Allow to pass default values when retrieving secrets
+ - [ ] Allow to fail silently when retrieving secrets
