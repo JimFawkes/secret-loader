@@ -53,7 +53,10 @@ Completed May 23rd 2020
  - [x] Add How-To for CLI
  - [x] Add examples
 
-_Completed Date and version tag link_
+
+Completed June 7th 2020
+
+:bookmark: Tag: [v0.4](https://github.com/JimFawkes/secret-loader/releases/tag/v0.4)
 
 --------
 
