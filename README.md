@@ -75,9 +75,9 @@ important_secret = secret("my_secret_name")
 
 ## How to run the secrets_loader from the Command Line
 ```
-python -m secrets_loader --help
+python -m secret_loader --help
 
-usage: secret_loader [-h] [--name NAME] [--fail] [--loader {EnvLoader,EnvFileLoader,AWSSecretsLoader}] [--custom_loader CUSTOM_LOADER] [--priority PRIORITY] [--remove_loaders] [--list_loaders]
+usage: secret_loader [-h] [--name NAME] [--fail] [--loader {EnvLoader,EnvFileLoader,AWSSecretsLoader}] [--custom_loader CUSTOM_LOADER] [--priority PRIORITY] [--remove_loaders] [--list_loaders] [--debug]
 
 Secret-Loader
 
@@ -102,8 +102,10 @@ optional arguments:
                         Specify a specific priority level for a selected or custom loader
   --remove_loaders      Remove pre-registered Loaders
   --list_loaders, -l    List all currently available loaders
+  --debug, -d           Print Debug Messages
 
-Version v0.4 - June 2020 - Jim Fawkes - src: github.com/JimFawkes/secret-loader
+Version 0.3 - June 2020 - Moritz Eilfort - src: github.com/JimFawkes/secret-loader
+License GPLv3+ - Copyright 2020 Moritz Eilfort
 ```
 
 ## Examples for CLI Usage

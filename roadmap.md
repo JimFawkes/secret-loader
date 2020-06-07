@@ -70,23 +70,16 @@ _Completed Date and version tag link_
 
 ## v0.6
 **GOAL:** _Package and Publish Project_
- - [ ] Add a Logo for the Project
  - [ ] Publish Package
 
 _Completed Date and version tag link_
 
 --------
 
-## v0.7
-**GOAL:** _Add documentation & Logs_
+# Backlog Potential Enhancements
+ - [ ] Add a Logo for the Project
  - [ ] Add Installation Guide to Readme
  - [ ] Add gifs to How-To
-
-_Completed Date and version tag link_
-
---------
-
-# Backlog Potential Enhancements
  - [ ] Allow Users to configure cli via config file (add multiple custom loaders, change priority)
  - [ ] Enable some results parser options for CLI
  - [ ] Add Google Cloud/Azure Loaders

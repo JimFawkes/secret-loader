@@ -15,10 +15,6 @@ The result is printed to standard out, so besure to use this wisely.
 
 """
 
-epilog = """
-Version v0.4 - June 2020 - Jim Fawkes - src: github.com/JimFawkes/secret-loader
-"""
-
 import argparse
 import logging
 import importlib
@@ -26,6 +22,13 @@ import sys
 
 from secret_loader.secrets import secret, SecretLoader
 from secret_loader.exceptions import SecretNotFoundError
+from secret_loader import __version__, __author__, __url__, __license__, __copyright__
+
+epilog = f"""
+Version {__version__} - June 2020 - {__author__} - src: {__url__}
+License {__license__} - {__copyright__}
+"""
+
 
 logger = logging.getLogger("secret_loader.cli")
 
