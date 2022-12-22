@@ -17,8 +17,8 @@ import logging
 import os
 
 import boto3.session
-from botocore.exceptions import ClientError
 import dotenv
+from botocore.exceptions import ClientError
 
 from .base import BaseLoader, pretty_print_function
 from .exceptions import SecretNotFoundError

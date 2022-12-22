@@ -3,16 +3,12 @@ Copyright: (c) 2020, Moritz Eilfort
 GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 """
 
-from collections import namedtuple
 import logging
+from collections import namedtuple
 
 from .base import BaseClass, pretty_print_function
-from .exceptions import (
-    SecretNotFoundError,
-    NoLoaderConfiguredError,
-    ConstructLoaderError,
-)
-from .loaders import EnvLoader, EnvFileLoader, AWSSecretsLoader
+from .exceptions import ConstructLoaderError, NoLoaderConfiguredError, SecretNotFoundError
+from .loaders import AWSSecretsLoader, EnvFileLoader, EnvLoader
 
 logger = logging.getLogger("secret_loader.secrets")
 
