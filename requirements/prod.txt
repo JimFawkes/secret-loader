@@ -1,2 +1,0 @@
-# Production Requirements
--r base.txt

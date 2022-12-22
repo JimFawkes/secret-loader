@@ -1,5 +1,0 @@
-# Requirements to run tests (Local or CI)
--r base.txt	
-
-pytest==7.2.0
-tox==4.0.16

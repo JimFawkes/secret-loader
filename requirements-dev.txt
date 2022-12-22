@@ -1,0 +1,17 @@
+# Development Requirements
+
+# Base
+boto3==1.26.35
+python-dotenv==0.21.0
+
+# Testing
+pytest==7.2.0
+pytest-cov==4.0.0
+
+# Formatting, Liniting, etc.
+black==22.12
+bandit==1.7.4
+mypy==0.991
+pre-commit==2.20.0
+pyflakes==3.0.1
+pylama==8.4.1
