@@ -1,6 +1,6 @@
 [![test-action](https://github.com/JimFawkes/utils/workflows/run-tests/badge.svg)](https://github.com/JimFawkes/secret-loader/actions)
 [![codecov](https://codecov.io/gh/JimFawkes/utils/branch/master/graph/badge.svg)](https://codecov.io/gh/JimFawkes/secret-loader)
-![python](https://img.shields.io/badge/python-3.7%20|%203.8-blue)
+![python](https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11-blue)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](COPYING)
 [![Latest Tag](https://img.shields.io/github/v/tag/jimfawkes/secret-loader)](https://github.com/JimFawkes/secret-loader/releases)

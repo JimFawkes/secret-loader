@@ -16,13 +16,13 @@ The result is printed to standard out, so besure to use this wisely.
 """
 
 import argparse
-import logging
 import importlib
+import logging
 import sys
 
-from secret_loader.secrets import secret, SecretLoader
+from secret_loader import __author__, __copyright__, __license__, __url__, __version__
 from secret_loader.exceptions import SecretNotFoundError
-from secret_loader import __version__, __author__, __url__, __license__, __copyright__
+from secret_loader.secrets import SecretLoader, secret
 
 epilog = f"""
 Version {__version__} - June 2020 - {__author__} - src: {__url__}
@@ -46,7 +46,10 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    "--name", "-n", help="Name of Secret to Load", type=str,
+    "--name",
+    "-n",
+    help="Name of Secret to Load",
+    type=str,
 )
 
 parser.add_argument("--fail", help="Fail if Secret is not Found", action="store_true")
@@ -72,11 +75,16 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--remove_loaders", help="Remove pre-registered Loaders", action="store_true",
+    "--remove_loaders",
+    help="Remove pre-registered Loaders",
+    action="store_true",
 )
 
 parser.add_argument(
-    "--list_loaders", "-l", help="List all currently available loaders", action="store_true",
+    "--list_loaders",
+    "-l",
+    help="List all currently available loaders",
+    action="store_true",
 )
 
 

@@ -5,44 +5,31 @@ on: [push]
 jobs:
   build:
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        python-version: ["3.9", "3.10", "3.11"]
 
     steps:
-    - uses: actions/checkout@master
-    - name: Set up Python 3.8
-      uses: actions/setup-python@master
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        python-version: 3.8
+        python-version: ${{ matrix.python-version }}
+
     - name: Install dependencies
       run: |
         python --version
         python -m pip install --upgrade pip
-        pip install -r requirements/test.txt
+        pip install -r requirements-dev.txt
+
     - name: Test with pytest
       run: |
-        pip install pytest
-        pip install pytest-cov
         pytest --cov=./ --cov-report=xml
+
     - name: Codecov
-      uses: codecov/codecov-action@v1.0.5
+      uses: codecov/codecov-action@v3.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
-
-    - name: Set up Python 3.7
-      uses: actions/setup-python@master
-      with:
-        python-version: 3.7
-    - name: Install dependencies
-      run: |
-        python --version
-        python -m pip install --upgrade pip
-        pip install -r requirements/test.txt
-    - name: Test with pytest
-      run: |
-        pip install pytest
-        pip install pytest-cov
-        pytest

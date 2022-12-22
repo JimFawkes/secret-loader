@@ -6,7 +6,7 @@
 
 [tool.black]
 line-length = 100
-target-version = ["py38"]
+target-version = ["py310"]
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -23,6 +23,9 @@ exclude = '''
 )/
 '''
 
+[tool.mypy]
+ignore_missing_imports=true
+
 [build-system]
 requires = ["flit_core >=2,<4"]
 build-backend = "flit_core.buildapi"
@@ -32,26 +35,27 @@ module="secret_loader"
 author="Moritz Eilfort"
 author-email="secret-loader@jimfawkes.com"
 home-page="https://github.com/JimFawkes/secret-loader"
-requires=[
-	"boto3==1.13.16",
-	"botocore==1.16.16",
-	"python-dotenv==0.13.0",
+requires= [
+  "boto3 <1.27, >1.13",
+  "python-dotenv <0.22, >0.13",
 ]
-requires-python=">=3.7"
+requires-python=">=3.9"
 description-file="README.md"
 classifiers=[
     "Intended Audience :: Developers",
     'Natural Language :: English',
     "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 [tool.flit.metadata.requires-extra]
-test=[
-	"pytest==5.4.2",
-	"pytest-cov",
+test= [
+  "pytest==7.2.0",
+  "pytest-cov==4.0.0"
+
 ]
 
 [tool.flit.entrypoints.console_scripts]
