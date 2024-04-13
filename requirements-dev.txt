@@ -9,7 +9,7 @@ pytest==7.2.0
 pytest-cov==4.0.0
 
 # Formatting, Liniting, etc.
-black==22.12
+black==24.3.0
 bandit==1.7.4
 mypy==0.991
 pre-commit==2.20.0
