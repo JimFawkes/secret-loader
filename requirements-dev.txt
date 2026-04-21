@@ -2,7 +2,7 @@
 
 # Base
 boto3==1.26.35
-python-dotenv==0.21.0
+python-dotenv==1.2.2
 
 # Testing
 pytest==7.2.0
